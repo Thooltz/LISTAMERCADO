@@ -7,20 +7,21 @@ const BottomSheet = styled.div<{ $show: boolean }>`
   left: 0;
   right: 0;
   background: var(--color-bg);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding: var(--spacing-xl);
   max-height: 85vh;
   overflow-y: auto;
   z-index: 1000;
   transform: ${props => (props.$show ? 'translateY(0)' : 'translateY(100%)')};
-  transition: transform 0.3s ease-out;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(10px);
 
   @media (min-width: 768px) {
     max-width: 500px;
     left: 50%;
     transform: ${props => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)')};
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     max-height: 80vh;
   }
 `
@@ -98,8 +99,8 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   width: 100%;
   padding: var(--spacing-md);
   background: ${props => {
-    if (props.$variant === 'primary') return 'var(--color-primary)'
-    if (props.$variant === 'danger') return 'var(--color-danger)'
+    if (props.$variant === 'primary') return 'var(--color-primary-gradient)'
+    if (props.$variant === 'danger') return 'var(--color-danger-gradient)'
     return 'var(--color-bg-secondary)'
   }};
   color: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'white' : 'var(--color-text)')};
@@ -108,11 +109,18 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 48px;
+  box-shadow: ${props => props.$variant ? 'var(--shadow-md)' : 'none'};
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    opacity: 0.95;
+    transform: translateY(-2px);
+    box-shadow: ${props => props.$variant ? 'var(--shadow-lg)' : 'var(--shadow-sm)'};
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
   }
 
   &:disabled {

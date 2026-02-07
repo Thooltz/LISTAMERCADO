@@ -19,10 +19,12 @@ const StickyHeader = styled.header`
   position: sticky;
   top: 0;
   background: var(--color-bg);
+  backdrop-filter: blur(10px);
   z-index: 100;
   padding: var(--spacing-md);
   border-bottom: 2px solid var(--color-border);
   margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
 `
 
 const HeaderContent = styled.div`
@@ -65,19 +67,24 @@ const ActionsBar = styled.div`
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   flex: 1;
   padding: var(--spacing-md) var(--spacing-lg);
-  background: ${props => (props.$variant === 'primary' ? 'var(--color-primary)' : 'var(--color-bg-secondary)')};
+  background: ${props => 
+    props.$variant === 'primary' 
+      ? 'var(--color-primary-gradient)' 
+      : 'var(--color-bg-secondary)'};
   color: ${props => (props.$variant === 'primary' ? 'white' : 'var(--color-text)')};
   border: ${props => (props.$variant === 'primary' ? 'none' : '2px solid var(--color-border)')};
   border-radius: var(--radius-lg);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 48px;
+  box-shadow: ${props => props.$variant === 'primary' ? 'var(--shadow-md)' : 'none'};
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
-    transform: translateY(-1px);
+    opacity: ${props => props.$variant === 'primary' ? '0.95' : '1'};
+    transform: translateY(-2px);
+    box-shadow: ${props => props.$variant === 'primary' ? 'var(--shadow-colored)' : 'var(--shadow-sm)'};
   }
 
   &:active:not(:disabled) {
@@ -103,13 +110,33 @@ const ItemCard = styled.div<{ checked: boolean }>`
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
   margin-bottom: var(--spacing-md);
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: ${props => (props.checked ? 0.6 : 1)};
   min-height: 60px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-primary-gradient);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.3s ease;
+  }
 
   &:hover {
     border-color: var(--color-primary);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
+    transform: translateX(4px);
+    
+    &::before {
+      transform: scaleY(1);
+    }
   }
 `
 

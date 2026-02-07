@@ -152,46 +152,6 @@ const ChecklistItem = styled.li`
   font-size: 0.85rem;
 `
 
-const EmailNotConfirmedAlert = styled.div`
-  padding: var(--spacing-lg);
-  background: #fee2e2;
-  border: 2px solid #ef4444;
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-md);
-`
-
-const AlertTitle = styled.div`
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: var(--spacing-md);
-  color: #991b1b;
-`
-
-const StepsList = styled.ol`
-  margin: var(--spacing-md) 0;
-  padding-left: var(--spacing-lg);
-`
-
-const Step = styled.li`
-  margin-bottom: var(--spacing-sm);
-  line-height: 1.6;
-`
-
-const LinkButton = styled.a`
-  display: inline-block;
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: #3b82f6;
-  color: white;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 0.2s;
-
-  &:hover {
-    background: #2563eb;
-  }
-`
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true)

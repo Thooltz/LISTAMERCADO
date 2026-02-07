@@ -268,18 +268,8 @@ function Home() {
     }
 
     try {
-      // Converter itens para formato esperado
-      const itemsData = items
-        .filter(item => item.name.trim())
-        .map(item => ({
-          name: item.name.trim(),
-          quantity: parseInt(item.quantity) || 1,
-        }))
-
-      const newList = await createList({ 
-        title: listTitle.trim(),
-        items: itemsData
-      })
+      // Criar lista apenas com título
+      const newList = await createList(listTitle.trim())
 
       // Limpar formulário
       setListTitle('')

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../auth/context/AuthProvider'
 import { useLists } from '../hooks/useLists'
 import styled from 'styled-components'
 import LoadingSpinner from '../../../shared/components/LoadingSpinner'
@@ -28,19 +27,24 @@ const Title = styled.h1`
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   padding: var(--spacing-md) var(--spacing-lg);
-  background: ${props => (props.$variant === 'primary' ? 'var(--color-primary)' : 'var(--color-bg-secondary)')};
+  background: ${props => 
+    props.$variant === 'primary' 
+      ? 'var(--color-primary-gradient)' 
+      : 'var(--color-bg-secondary)'};
   color: ${props => (props.$variant === 'primary' ? 'white' : 'var(--color-text)')};
   border: ${props => (props.$variant === 'primary' ? 'none' : '2px solid var(--color-border)')};
   border-radius: var(--radius-lg);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  min-height: 48px; /* Área de toque confortável */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  box-shadow: ${props => props.$variant === 'primary' ? 'var(--shadow-md)' : 'none'};
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
-    transform: translateY(-1px);
+    opacity: ${props => props.$variant === 'primary' ? '0.95' : '1'};
+    transform: translateY(-2px);
+    box-shadow: ${props => props.$variant === 'primary' ? 'var(--shadow-colored)' : 'var(--shadow-sm)'};
   }
 
   &:active:not(:disabled) {
@@ -65,20 +69,39 @@ const ListCard = styled.div`
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--color-primary-gradient);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
 
   &:hover {
     border-color: var(--color-primary);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-colored);
+    transform: translateY(-4px);
+    
+    &::before {
+      transform: scaleX(1);
+    }
   }
 
   &:active {
-    transform: translateY(0);
+    transform: translateY(-2px);
   }
 `
 
@@ -117,20 +140,21 @@ const BottomSheet = styled.div<{ $show: boolean }>`
   left: 0;
   right: 0;
   background: var(--color-bg);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding: var(--spacing-xl);
   max-height: 85vh;
   overflow-y: auto;
   z-index: 1000;
   transform: ${props => (props.$show ? 'translateY(0)' : 'translateY(100%)')};
-  transition: transform 0.3s ease-out;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(10px);
 
   @media (min-width: 768px) {
     max-width: 500px;
     left: 50%;
     transform: ${props => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)')};
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     max-height: 80vh;
   }
 `
@@ -204,7 +228,6 @@ const ModalActions = styled.div`
 `
 
 function ListsPage() {
-  const { user } = useAuth()
   const { 
     lists, 
     isLoading, 

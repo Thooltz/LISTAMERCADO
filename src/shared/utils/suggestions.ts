@@ -37,7 +37,7 @@ const suggestions: Record<string, { category: string; unit: string }> = {
   // Limpeza
   sabão: { category: 'Limpeza', unit: 'un' },
   detergente: { category: 'Limpeza', unit: 'un' },
-  água: { category: 'Limpeza', unit: 'L' },
+  'água sanitária': { category: 'Limpeza', unit: 'L' },
   sabonete: { category: 'Limpeza', unit: 'un' },
   shampoo: { category: 'Limpeza', unit: 'un' },
   papel: { category: 'Limpeza', unit: 'un' },
