@@ -171,7 +171,7 @@ function Settings() {
   return (
     <Container>
       <Header>
-        <Button onClick={() => navigate('/home')}>← Voltar</Button>
+        <Button onClick={() => navigate('/lists')}>← Voltar</Button>
         <Title>Configurações</Title>
       </Header>
 

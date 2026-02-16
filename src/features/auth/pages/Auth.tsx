@@ -1,11 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, AuthError } from '../context/AuthProvider'
-import { isSupabaseConfigured } from '../../../shared/lib/supabase'
 import toast from 'react-hot-toast'
 import styled from 'styled-components'
-
-const DEV_NO_EMAIL = import.meta.env.VITE_DEV_NO_EMAIL_CONFIRMATION === 'true'
 
 const Container = styled.div`
   min-height: 100vh;
@@ -108,49 +105,6 @@ const ErrorMessage = styled.div`
   font-size: 0.9rem;
 `
 
-const WarningMessage = styled.div`
-  padding: var(--spacing-md);
-  background: #fef3c7;
-  color: #92400e;
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  margin-bottom: var(--spacing-md);
-  border-left: 4px solid #f59e0b;
-`
-
-const WarningTitle = styled.div`
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-`
-
-const DevModeBanner = styled.div`
-  padding: var(--spacing-md);
-  background: #d1fae5;
-  border: 2px solid #10b981;
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-md);
-  font-size: 0.85rem;
-  color: #065f46;
-`
-
-const DevModeTitle = styled.div`
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-`
-
-const Checklist = styled.ul`
-  list-style: none;
-  padding-left: 0;
-  margin: var(--spacing-sm) 0;
-`
-
-const ChecklistItem = styled.li`
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-xs);
-  font-size: 0.85rem;
-`
 
 
 function Auth() {
@@ -159,27 +113,15 @@ function Auth() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<AuthError | null>(null)
-  const [cooldown, setCooldown] = useState(0) // Cooldown após signup/resend
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
   const submitRef = useRef(false) // Prevenir múltiplos submits
-
-  // Cooldown após signup/resend para evitar rate limit
-  useEffect(() => {
-    if (cooldown <= 0) return
-
-    const timer = setTimeout(() => {
-      setCooldown(prev => Math.max(0, prev - 1))
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [cooldown])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Prevenir múltiplos submits
-    if (submitRef.current || loading || cooldown > 0) {
+    if (submitRef.current || loading) {
       return
     }
 
@@ -200,16 +142,6 @@ function Auth() {
       setError({ code: 'VALIDATION_ERROR', message: 'A senha deve ter pelo menos 6 caracteres' })
       return
     }
-    
-    // Verificar se Supabase está configurado
-    if (!isSupabaseConfigured()) {
-      setError({
-        code: 'SUPABASE_NOT_CONFIGURED',
-        message: 'Supabase não está configurado. Por favor, configure as variáveis de ambiente no arquivo .env. Veja o arquivo SETUP.md para instruções.',
-      })
-      toast.error('Configure o Supabase primeiro')
-      return
-    }
 
     submitRef.current = true
     setLoading(true)
@@ -218,26 +150,15 @@ function Auth() {
       if (isLogin) {
         await signIn(email.trim(), password)
         toast.success('Login realizado com sucesso!')
-        navigate('/home')
+        navigate('/lists')
       } else {
         await signUp(email.trim(), password)
         toast.success('Conta criada com sucesso!')
-        navigate('/home')
+        navigate('/lists')
       }
     } catch (err: any) {
-      // Tratar erros específicos
-      if (err.code === 'over_email_send_rate_limit') {
-        // Rate limit: ativar cooldown de 60s
-        setCooldown(60)
-        setError({
-          ...err,
-          message: 'Limite de emails atingido. Aguarde alguns minutos ou desative "Confirm email" no Supabase (modo DEV).',
-        })
-        toast.error('Limite de emails atingido. Aguarde alguns minutos.')
-      } else {
-        setError(err)
-        toast.error(err.message || (isLogin ? 'Erro ao fazer login. Tente novamente.' : 'Erro ao criar conta. Tente novamente.'))
-      }
+      setError({ code: err.code, message: err.message || 'Erro ao realizar operação' })
+      toast.error(err.message || (isLogin ? 'Erro ao fazer login. Tente novamente.' : 'Erro ao criar conta. Tente novamente.'))
     } finally {
       setLoading(false)
       submitRef.current = false
@@ -258,53 +179,6 @@ function Auth() {
         </Tabs>
 
         <Form onSubmit={handleSubmit}>
-          {DEV_NO_EMAIL && (
-            <DevModeBanner>
-              <DevModeTitle>🔧 Modo DEV: Sem Confirmação de Email</DevModeTitle>
-              <div>
-                Para desenvolvimento local, a confirmação de email deve estar <strong>desativada</strong> no Supabase.
-                <br />
-                <br />
-                <strong>Checklist:</strong>
-                <Checklist>
-                  <ChecklistItem>
-                    <input type="checkbox" disabled checked={false} />
-                    <span>Confirm email = OFF (Supabase Dashboard → Authentication → Providers → Email)</span>
-                  </ChecklistItem>
-                  <ChecklistItem>
-                    <input type="checkbox" disabled checked={false} />
-                    <span>Provider Email = Enabled</span>
-                  </ChecklistItem>
-                </Checklist>
-                <br />
-                <strong>Como desativar:</strong> Supabase Dashboard → Authentication → Providers → Email → "Confirm email" OFF
-              </div>
-            </DevModeBanner>
-          )}
-
-          {cooldown > 0 && (
-            <WarningMessage>
-              <WarningTitle>⏱️ Aguarde antes de tentar novamente</WarningTitle>
-              <div>
-                Cooldown ativo: {cooldown} segundos restantes
-                <br />
-                <small>Isso evita rate limit de emails do Supabase.</small>
-              </div>
-            </WarningMessage>
-          )}
-
-          {!isSupabaseConfigured() && (
-            <WarningMessage>
-              <WarningTitle>⚠️ Supabase não configurado</WarningTitle>
-              <div>
-                Para usar o app, você precisa configurar o Supabase. Crie um arquivo .env na raiz do projeto com suas credenciais.
-                <br />
-                <br />
-                Veja o arquivo <strong>SETUP.md</strong> para instruções detalhadas.
-              </div>
-            </WarningMessage>
-          )}
-
           {error && (
             <ErrorMessage>{error.message}</ErrorMessage>
           )}
@@ -331,26 +205,14 @@ function Auth() {
           <Button 
             type="submit" 
             $loading={loading} 
-            disabled={loading || !isSupabaseConfigured() || cooldown > 0}
+            disabled={loading}
           >
             {loading 
               ? 'Carregando...' 
-              : cooldown > 0 
-                ? `Aguarde ${cooldown}s` 
-                : isLogin 
-                  ? 'Entrar' 
-                  : 'Criar conta'}
+              : isLogin 
+                ? 'Entrar' 
+                : 'Criar conta'}
           </Button>
-          
-          {!isSupabaseConfigured() && (
-            <Button
-              type="button"
-              onClick={() => navigate('/setup')}
-              style={{ marginTop: '8px', background: 'var(--color-warning)' }}
-            >
-              ⚙️ Ir para Configuração
-            </Button>
-          )}
         </Form>
       </Card>
     </Container>

@@ -1,38 +1,38 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/context/AuthProvider'
-import { itemService } from '../services/itemService'
-import { CreateItemInput, UpdateItemInput } from '../../../shared/types'
+import { getItems, addItem, toggleItem, removeItem } from '../../../services/listService'
 import toast from 'react-hot-toast'
 
-export function useItems(listId: string | undefined) {
+export function useItems() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const uid = user?.uid
 
   const {
     data: items = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['items', listId],
+    queryKey: ['items', uid],
     queryFn: () => {
-      if (!listId) {
-        throw new Error('ID da lista é obrigatório')
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
       }
-      return itemService.getItemsByList(listId)
+      return getItems(uid)
     },
-    enabled: !!listId && !!user,
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('não encontrada')) return false
-      if (error?.message?.includes('não autenticado') || error?.message?.includes('Sessão expirada')) return false
-      return failureCount < 2
-    },
+    enabled: !!uid,
+    staleTime: 1000 * 30,
   })
 
   const createMutation = useMutation({
-    mutationFn: (input: CreateItemInput) => itemService.addItem(input),
+    mutationFn: ({ name, qty }: { name: string; qty?: number }) => {
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
+      }
+      return addItem(uid, name, qty || 1)
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items', listId] })
-      queryClient.invalidateQueries({ queryKey: ['lists', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['items', uid] })
       toast.success('Item adicionado!')
     },
     onError: (error: any) => {
@@ -41,46 +41,41 @@ export function useItems(listId: string | undefined) {
     },
   })
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateItemInput }) =>
-      itemService.updateItem(id, input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items', listId] })
-      queryClient.invalidateQueries({ queryKey: ['lists', user?.id] })
-    },
-    onError: (error: any) => {
-      console.error('Erro ao atualizar item:', error)
-      toast.error(error.message || 'Erro ao atualizar item')
-    },
-  })
-
   const toggleCheckMutation = useMutation({
-    mutationFn: ({ id, checked }: { id: string; checked: boolean }) =>
-      itemService.updateItem(id, { checked }),
+    mutationFn: ({ id, checked }: { id: string; checked: boolean }) => {
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
+      }
+      return toggleItem(uid, id, checked)
+    },
     onMutate: async ({ id, checked }) => {
-      await queryClient.cancelQueries({ queryKey: ['items', listId] })
-      const previousItems = queryClient.getQueryData(['items', listId])
-      queryClient.setQueryData(['items', listId], (old: any[]) =>
+      await queryClient.cancelQueries({ queryKey: ['items', uid] })
+      const previousItems = queryClient.getQueryData(['items', uid])
+      queryClient.setQueryData(['items', uid], (old: any[]) =>
         old?.map(item => (item.id === id ? { ...item, checked } : item))
       )
       return { previousItems }
     },
     onError: (_err, _variables, context) => {
       if (context?.previousItems) {
-        queryClient.setQueryData(['items', listId], context.previousItems)
+        queryClient.setQueryData(['items', uid], context.previousItems)
       }
       toast.error('Erro ao atualizar item')
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['items', listId] })
+      queryClient.invalidateQueries({ queryKey: ['items', uid] })
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => itemService.deleteItem(id),
+    mutationFn: (id: string) => {
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
+      }
+      return removeItem(uid, id)
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items', listId] })
-      queryClient.invalidateQueries({ queryKey: ['lists', user?.id] })
+      queryClient.invalidateQueries({ queryKey: ['items', uid] })
       toast.success('Item removido')
     },
     onError: (error: any) => {
@@ -94,11 +89,9 @@ export function useItems(listId: string | undefined) {
     isLoading,
     error,
     addItem: createMutation.mutateAsync,
-    updateItem: updateMutation.mutateAsync,
     toggleCheck: toggleCheckMutation.mutate,
     deleteItem: deleteMutation.mutateAsync,
     isAdding: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
   }
 }

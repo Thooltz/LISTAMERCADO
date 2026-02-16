@@ -1,20 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './features/auth/context/AuthProvider'
-import { isSupabaseConfigured } from './shared/lib/supabase'
 import Landing from './features/auth/pages/Landing'
 import Auth from './features/auth/pages/Auth'
-import Setup from './features/setup/pages/Setup'
 import ListsPage from './features/lists/pages/ListsPage'
-import ListDetailsPage from './features/lists/pages/ListDetailsPage'
 import Settings from './features/settings/pages/Settings'
 import LoadingSpinner from './shared/components/LoadingSpinner'
-
-function SetupGuard({ children }: { children: React.ReactNode }) {
-  if (!isSupabaseConfigured()) {
-    return <Navigate to="/setup" replace />
-  }
-  return <>{children}</>
-}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -39,67 +29,31 @@ function App() {
 
   return (
     <Routes>
-      {/* Rota de setup - sempre acessível */}
-      <Route path="/setup" element={<Setup />} />
-      
-      {/* Todas as outras rotas precisam de Supabase configurado */}
       <Route
         path="/"
-        element={
-          <SetupGuard>
-            {user ? <Navigate to="/lists" replace /> : <Landing />}
-          </SetupGuard>
-        }
+        element={user ? <Navigate to="/lists" replace /> : <Landing />}
       />
       <Route
         path="/auth"
-        element={
-          <SetupGuard>
-            {user ? <Navigate to="/lists" replace /> : <Auth />}
-          </SetupGuard>
-        }
-      />
-      <Route
-        path="/home"
-        element={
-          <SetupGuard>
-            <PrivateRoute>
-              <ListsPage />
-            </PrivateRoute>
-          </SetupGuard>
-        }
+        element={user ? <Navigate to="/lists" replace /> : <Auth />}
       />
       <Route
         path="/lists"
         element={
-          <SetupGuard>
-            <PrivateRoute>
-              <ListsPage />
-            </PrivateRoute>
-          </SetupGuard>
-        }
-      />
-      <Route
-        path="/lists/:id"
-        element={
-          <SetupGuard>
-            <PrivateRoute>
-              <ListDetailsPage />
-            </PrivateRoute>
-          </SetupGuard>
+          <PrivateRoute>
+            <ListsPage />
+          </PrivateRoute>
         }
       />
       <Route
         path="/settings"
         element={
-          <SetupGuard>
-            <PrivateRoute>
-              <Settings />
-            </PrivateRoute>
-          </SetupGuard>
+          <PrivateRoute>
+            <Settings />
+          </PrivateRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/setup" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
