@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../auth/context/AuthProvider'
 import { useLists } from '../hooks/useLists'
 import { useItemsPreview } from '../hooks/useItemsPreview'
 import styled from 'styled-components'
@@ -8,18 +9,19 @@ import toast from 'react-hot-toast'
 
 const Container = styled.div`
   min-height: 100vh;
-  background: #f5f5f5;
-  padding-bottom: 100px;
+  background: linear-gradient(180deg, #f8f9fa 0%, #f5f5f5 100%);
+  padding-bottom: 20px;
 `
 
 const Header = styled.header`
   background: white;
-  padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 20px 16px;
+  border-bottom: none;
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  backdrop-filter: blur(10px);
 `
 
 const HeaderContent = styled.div`
@@ -28,63 +30,115 @@ const HeaderContent = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
 `
 
 const Title = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 800;
   color: #1a1a1a;
   margin: 0;
+  flex: 1;
+  letter-spacing: -0.5px;
+`
+
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
 `
 
 const AddButton = styled.button`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 10px 20px;
+  border-radius: 14px;
+  padding: 12px 20px;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transition: all 0.2s;
-  min-height: 44px;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  letter-spacing: 0.3px;
 
   &:active {
-    transform: scale(0.95);
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+    transform: scale(0.96) translateY(1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
+  }
+`
+
+const LogoutButton = styled.button`
+  background: #f5f5f5;
+  border: none;
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #666;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:active {
+    background: #e0e0e0;
+    transform: scale(0.95);
+    color: #e74c3c;
   }
 `
 
 const Content = styled.div`
   max-width: 600px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px 16px;
 `
 
 const ListsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 `
 
 const ListCard = styled.div`
   background: white;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #f0f0f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
 
   &:active {
-    transform: scale(0.98);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    transform: scale(0.98) translateY(2px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    
+    &::before {
+      transform: scaleX(1);
+    }
   }
 `
 
@@ -96,12 +150,13 @@ const ListHeader = styled.div`
 `
 
 const ListTitle = styled.h3`
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: #1a1a1a;
   flex: 1;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
+  letter-spacing: -0.3px;
 `
 
 const ListActions = styled.div`
@@ -111,23 +166,23 @@ const ListActions = styled.div`
 `
 
 const IconButton = styled.button`
-  background: #f5f5f5;
+  background: #f8f9fa;
   border: none;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   cursor: pointer;
   color: #666;
-  padding: 8px;
-  min-width: 36px;
-  min-height: 36px;
+  padding: 10px;
+  min-width: 40px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:active {
-    background: #e0e0e0;
-    transform: scale(0.95);
+    background: #e9ecef;
+    transform: scale(0.92);
   }
 
   &.danger:active {
@@ -137,16 +192,17 @@ const IconButton = styled.button`
 `
 
 const ItemsPreview = styled.div`
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid #f0f0f0;
 `
 
 const PreviewItem = styled.div`
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 6px;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 8px;
+  line-height: 1.6;
+  font-weight: 500;
   
   &:last-child {
     margin-bottom: 0;
@@ -154,28 +210,32 @@ const PreviewItem = styled.div`
 `
 
 const PreviewMore = styled.div`
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #999;
   font-style: italic;
-  margin-top: 6px;
+  margin-top: 8px;
+  font-weight: 500;
 `
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
   color: #999;
 `
 
 const EmptyTitle = styled.h2`
-  font-size: 1.3rem;
-  margin-bottom: 12px;
+  font-size: 1.5rem;
+  margin-bottom: 16px;
   color: #666;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 `
 
 const EmptyText = styled.p`
-  margin-bottom: 24px;
-  font-size: 0.95rem;
+  margin-bottom: 32px;
+  font-size: 1rem;
+  color: #888;
+  line-height: 1.6;
 `
 
 // Modal
@@ -312,6 +372,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
 `
 
 function ListsPage() {
+  const { signOut } = useAuth()
   const { lists, isLoading, createList, renameList, deleteList, isCreating, isDeleting } = useLists()
   const navigate = useNavigate()
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -320,6 +381,17 @@ function ListsPage() {
   const [listName, setListName] = useState('')
   const [editingListId, setEditingListId] = useState<string | null>(null)
   const [deletingListId, setDeletingListId] = useState<string | null>(null)
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      toast.success('Logout realizado!')
+      navigate('/auth')
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error)
+      toast.error('Erro ao fazer logout')
+    }
+  }
 
   const handleCreateList = async () => {
     if (!listName.trim()) {
@@ -394,9 +466,14 @@ function ListsPage() {
         <Header>
           <HeaderContent>
             <Title>Minhas Listas</Title>
-            <AddButton onClick={() => setShowCreateModal(true)} disabled={isCreating}>
-              {isCreating ? '...' : '+ Nova'}
-            </AddButton>
+            <HeaderActions>
+              <AddButton onClick={() => setShowCreateModal(true)} disabled={isCreating}>
+                {isCreating ? '...' : '+ Nova'}
+              </AddButton>
+              <LogoutButton onClick={handleLogout} title="Sair">
+                🚪
+              </LogoutButton>
+            </HeaderActions>
           </HeaderContent>
         </Header>
 

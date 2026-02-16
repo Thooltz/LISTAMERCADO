@@ -9,87 +9,157 @@ const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-lg);
-  background: var(--color-bg-secondary);
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 20s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.1) rotate(180deg); }
+  }
 `
 
 const Card = styled.div`
   width: 100%;
-  max-width: 400px;
-  background: var(--color-bg);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  box-shadow: var(--shadow-lg);
+  max-width: 420px;
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+
+  @media (max-width: 480px) {
+    padding: 32px 24px;
+    border-radius: 20px;
+  }
+`
+
+const Logo = styled.div`
+  text-align: center;
+  margin-bottom: 32px;
+`
+
+const LogoIcon = styled.div`
+  font-size: 3rem;
+  margin-bottom: 12px;
+`
+
+const LogoTitle = styled.h1`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`
+
+const LogoSubtitle = styled.p`
+  font-size: 0.95rem;
+  color: #666;
+  margin-top: 8px;
 `
 
 const Tabs = styled.div`
   display: flex;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-xl);
-  border-bottom: 2px solid var(--color-border);
+  gap: 8px;
+  margin-bottom: 32px;
+  background: #f5f5f5;
+  padding: 4px;
+  border-radius: 12px;
 `
 
 const Tab = styled.button<{ $active: boolean }>`
   flex: 1;
-  padding: var(--spacing-md);
-  background: none;
+  padding: 12px;
+  background: ${props => props.$active ? 'white' : 'transparent'};
   border: none;
   font-size: 1rem;
-  font-weight: ${props => (props.$active ? '600' : '400')};
-  color: ${props => (props.$active ? 'var(--color-primary)' : 'var(--color-text-light)')};
-  border-bottom: 2px solid ${props => (props.$active ? 'var(--color-primary)' : 'transparent')};
+  font-weight: ${props => (props.$active ? '600' : '500')};
+  color: ${props => (props.$active ? '#667eea' : '#999')};
+  border-radius: 8px;
   transition: all 0.2s;
   cursor: pointer;
+  box-shadow: ${props => props.$active ? '0 2px 8px rgba(102, 126, 234, 0.2)' : 'none'};
 
-  &:hover {
-    color: var(--color-primary);
+  &:active {
+    transform: scale(0.98);
   }
 `
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 20px;
+`
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`
+
+const Label = styled.label`
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a1a1a;
 `
 
 const Input = styled.input`
   width: 100%;
-  padding: var(--spacing-md);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.2s;
-  background: var(--color-bg);
-  color: var(--color-text);
+  transition: all 0.2s;
+  background: #fafafa;
+  color: #1a1a1a;
 
   &:focus {
-    border-color: var(--color-primary);
+    border-color: #667eea;
+    outline: none;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
   }
 
   &::placeholder {
-    color: var(--color-text-lighter);
+    color: #999;
   }
 `
 
 const Button = styled.button<{ $loading?: boolean }>`
   width: 100%;
-  padding: var(--spacing-md);
-  background: var(--color-primary);
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-size: 1rem;
   font-weight: 600;
-  border-radius: var(--radius-md);
-  transition: background 0.2s, transform 0.2s;
+  border: none;
+  border-radius: 12px;
+  transition: all 0.2s;
   cursor: ${props => (props.$loading ? 'not-allowed' : 'pointer')};
   opacity: ${props => (props.$loading ? 0.7 : 1)};
-
-  &:hover:not(:disabled) {
-    background: var(--color-primary-dark);
-    transform: translateY(-1px);
-  }
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  min-height: 52px;
 
   &:active:not(:disabled) {
-    transform: translateY(0);
+    transform: scale(0.98);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
   }
 
   &:disabled {
@@ -98,14 +168,13 @@ const Button = styled.button<{ $loading?: boolean }>`
 `
 
 const ErrorMessage = styled.div`
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: #fee2e2;
-  color: var(--color-danger);
-  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  background: #fee;
+  color: #e74c3c;
+  border-radius: 12px;
   font-size: 0.9rem;
+  border: 1px solid #fcc;
 `
-
-
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true)
@@ -115,19 +184,17 @@ function Auth() {
   const [error, setError] = useState<AuthError | null>(null)
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
-  const submitRef = useRef(false) // Prevenir múltiplos submits
+  const submitRef = useRef(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Prevenir múltiplos submits
     if (submitRef.current || loading) {
       return
     }
 
     setError(null)
     
-    // Validação básica
     if (!email.trim()) {
       setError({ code: 'VALIDATION_ERROR', message: 'Por favor, insira seu email' })
       return
@@ -165,15 +232,26 @@ function Auth() {
     }
   }
 
-
   return (
     <Container>
       <Card>
+        <Logo>
+          <LogoIcon>📝</LogoIcon>
+          <LogoTitle>SmartList</LogoTitle>
+          <LogoSubtitle>Sua lista de compras inteligente</LogoSubtitle>
+        </Logo>
+
         <Tabs>
-          <Tab $active={isLogin} onClick={() => setIsLogin(true)}>
+          <Tab $active={isLogin} onClick={() => {
+            setIsLogin(true)
+            setError(null)
+          }}>
             Entrar
           </Tab>
-          <Tab $active={!isLogin} onClick={() => setIsLogin(false)}>
+          <Tab $active={!isLogin} onClick={() => {
+            setIsLogin(false)
+            setError(null)
+          }}>
             Cadastrar
           </Tab>
         </Tabs>
@@ -183,24 +261,32 @@ function Auth() {
             <ErrorMessage>{error.message}</ErrorMessage>
           )}
 
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-          />
+          <InputGroup>
+            <Label>Email</Label>
+            <Input
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              disabled={loading}
+            />
+          </InputGroup>
 
-          <Input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            autoComplete={isLogin ? 'current-password' : 'new-password'}
-            minLength={6}
-          />
+          <InputGroup>
+            <Label>Senha</Label>
+            <Input
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete={isLogin ? 'current-password' : 'new-password'}
+              minLength={6}
+              disabled={loading}
+            />
+          </InputGroup>
 
           <Button 
             type="submit" 

@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './features/auth/context/AuthProvider'
-import Landing from './features/auth/pages/Landing'
 import Auth from './features/auth/pages/Auth'
 import ListsPage from './features/lists/pages/ListsPage'
 import ListDetailPage from './features/lists/pages/ListDetailPage'
@@ -32,7 +31,7 @@ function App() {
     <Routes>
       <Route
         path="/"
-        element={user ? <Navigate to="/lists" replace /> : <Landing />}
+        element={user ? <Navigate to="/lists" replace /> : <Navigate to="/auth" replace />}
       />
       <Route
         path="/login"

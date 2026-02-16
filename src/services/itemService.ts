@@ -42,7 +42,7 @@ function docToItem(docSnap: QueryDocumentSnapshot<DocumentData>): Item {
 
 /**
  * Obtém todos os itens de uma lista (realtime)
- * Itens não marcados primeiro, depois marcados
+ * Itens não marcados primeiro, depois marcados (ordenação no front-end)
  */
 export function subscribeItems(
   uid: string,
@@ -54,30 +54,90 @@ export function subscribeItems(
   }
 
   const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
-  const q = query(itemsRef, orderBy('checked', 'asc'), orderBy('createdAt', 'desc'))
-
-  return onSnapshot(
-    q,
-    (snapshot: QuerySnapshot<DocumentData>) => {
-      const items = snapshot.docs.map(docToItem)
-      // Ordenar: não marcados primeiro, depois marcados
-      const sortedItems = items.sort((a, b) => {
-        if (a.checked === b.checked) {
-          return b.createdAt.getTime() - a.createdAt.getTime()
-        }
+  
+  // Função auxiliar para ordenar itens
+  const sortItems = (items: Item[]): Item[] => {
+    return items.sort((a, b) => {
+      // Primeiro: não marcados antes de marcados
+      if (a.checked !== b.checked) {
         return a.checked ? 1 : -1
-      })
-      callback(sortedItems)
-    },
-    (error) => {
-      console.error('Erro ao buscar itens:', error)
+      }
+      // Segundo: mais recente primeiro
+      return b.createdAt.getTime() - a.createdAt.getTime()
+    })
+  }
+
+  // Tentar query com orderBy primeiro
+  const q = query(itemsRef, orderBy('createdAt', 'desc'))
+  let unsubscribeFn: Unsubscribe | null = null
+
+  try {
+    unsubscribeFn = onSnapshot(
+      q,
+      (snapshot: QuerySnapshot<DocumentData>) => {
+        const items = snapshot.docs.map(docToItem)
+        const sortedItems = sortItems(items)
+        callback(sortedItems)
+      },
+      (error) => {
+        console.error('Erro ao buscar itens:', error)
+        // Se houver erro de índice, tentar query alternativa sem orderBy
+        if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+          console.warn('Erro de índice detectado. Usando query alternativa sem orderBy...')
+          // Criar nova subscription sem orderBy como fallback
+          const fallbackQuery = query(itemsRef)
+          unsubscribeFn = onSnapshot(
+            fallbackQuery,
+            (snapshot: QuerySnapshot<DocumentData>) => {
+              const items = snapshot.docs.map(docToItem)
+              const sortedItems = sortItems(items)
+              callback(sortedItems)
+            },
+            (fallbackError) => {
+              console.error('Erro na query alternativa:', fallbackError)
+              callback([])
+            }
+          )
+        } else {
+          callback([])
+        }
+      }
+    )
+  } catch (error: any) {
+    // Se houver erro ao criar a subscription, tentar fallback imediatamente
+    if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+      console.warn('Erro de índice ao criar subscription. Usando query alternativa...')
+      const fallbackQuery = query(itemsRef)
+      unsubscribeFn = onSnapshot(
+        fallbackQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const items = snapshot.docs.map(docToItem)
+          const sortedItems = sortItems(items)
+          callback(sortedItems)
+        },
+        (fallbackError) => {
+          console.error('Erro na query alternativa:', fallbackError)
+          callback([])
+        }
+      )
+    } else {
+      console.error('Erro ao criar subscription:', error)
       callback([])
+      return () => {} // Retornar unsubscribe vazio
     }
-  )
+  }
+
+  // Retornar função de unsubscribe
+  return () => {
+    if (unsubscribeFn) {
+      unsubscribeFn()
+    }
+  }
 }
 
 /**
  * Obtém todos os itens de uma lista (one-time)
+ * Itens não marcados primeiro, depois marcados (ordenação no front-end)
  */
 export async function getItems(uid: string, listId: string): Promise<Item[]> {
   try {
@@ -86,17 +146,35 @@ export async function getItems(uid: string, listId: string): Promise<Item[]> {
     }
 
     const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
-    const q = query(itemsRef, orderBy('checked', 'asc'), orderBy('createdAt', 'desc'))
-    const querySnapshot = await getDocs(q)
-
-    const items = querySnapshot.docs.map(docToItem)
-    // Ordenar: não marcados primeiro, depois marcados
-    return items.sort((a, b) => {
-      if (a.checked === b.checked) {
+    // Query simples: apenas ordenar por createdAt (sem índice composto necessário)
+    let q = query(itemsRef, orderBy('createdAt', 'desc'))
+    
+    try {
+      const querySnapshot = await getDocs(q)
+      const items = querySnapshot.docs.map(docToItem)
+      // Ordenar no front-end: não marcados primeiro, depois marcados
+      return items.sort((a, b) => {
+        if (a.checked !== b.checked) {
+          return a.checked ? 1 : -1
+        }
         return b.createdAt.getTime() - a.createdAt.getTime()
+      })
+    } catch (queryError: any) {
+      // Fallback: se houver erro de índice, tentar sem orderBy
+      if (queryError.code === 'failed-precondition' || queryError.message?.includes('index')) {
+        console.warn('Tentando query alternativa sem orderBy...')
+        const fallbackQuery = query(itemsRef)
+        const querySnapshot = await getDocs(fallbackQuery)
+        const items = querySnapshot.docs.map(docToItem)
+        return items.sort((a, b) => {
+          if (a.checked !== b.checked) {
+            return a.checked ? 1 : -1
+          }
+          return b.createdAt.getTime() - a.createdAt.getTime()
+        })
       }
-      return a.checked ? 1 : -1
-    })
+      throw queryError
+    }
   } catch (error: any) {
     console.error('Erro ao buscar itens:', error)
     throw new Error(error.message || 'Erro ao buscar itens')
@@ -105,31 +183,58 @@ export async function getItems(uid: string, listId: string): Promise<Item[]> {
 
 /**
  * Obtém preview de itens (máximo 3) para exibir no card da lista
+ * Retorna os itens mais recentes não marcados primeiro
  */
-export async function getItemsPreview(uid: string, listId: string, limit: number = 3): Promise<{ items: Item[]; total: number }> {
+export async function getItemsPreview(uid: string, listId: string, previewLimit: number = 3): Promise<{ items: Item[]; total: number }> {
   try {
     if (!uid || !listId) {
       throw new Error('UID e listId são obrigatórios')
     }
 
     const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
-    const q = query(itemsRef, orderBy('checked', 'asc'), orderBy('createdAt', 'desc'))
-    const querySnapshot = await getDocs(q)
-
-    const allItems = querySnapshot.docs.map(docToItem)
-    const sortedItems = allItems.sort((a, b) => {
-      if (a.checked === b.checked) {
+    // Query simples: ordenar por createdAt e limitar para performance
+    // Não usar orderBy('checked') para evitar necessidade de índice composto
+    let q = query(itemsRef, orderBy('createdAt', 'desc'))
+    
+    try {
+      const querySnapshot = await getDocs(q)
+      const allItems = querySnapshot.docs.map(docToItem)
+      
+      // Ordenar no front-end: não marcados primeiro, depois marcados
+      const sortedItems = allItems.sort((a, b) => {
+        if (a.checked !== b.checked) {
+          return a.checked ? 1 : -1
+        }
         return b.createdAt.getTime() - a.createdAt.getTime()
-      }
-      return a.checked ? 1 : -1
-    })
+      })
 
-    return {
-      items: sortedItems.slice(0, limit),
-      total: sortedItems.length,
+      return {
+        items: sortedItems.slice(0, previewLimit),
+        total: sortedItems.length,
+      }
+    } catch (queryError: any) {
+      // Fallback: se houver erro de índice, tentar sem orderBy
+      if (queryError.code === 'failed-precondition' || queryError.message?.includes('index')) {
+        console.warn('Tentando query alternativa sem orderBy para preview...')
+        const fallbackQuery = query(itemsRef)
+        const querySnapshot = await getDocs(fallbackQuery)
+        const allItems = querySnapshot.docs.map(docToItem)
+        const sortedItems = allItems.sort((a, b) => {
+          if (a.checked !== b.checked) {
+            return a.checked ? 1 : -1
+          }
+          return b.createdAt.getTime() - a.createdAt.getTime()
+        })
+        return {
+          items: sortedItems.slice(0, previewLimit),
+          total: sortedItems.length,
+        }
+      }
+      throw queryError
     }
   } catch (error: any) {
     console.error('Erro ao buscar preview de itens:', error)
+    // Retornar vazio em caso de erro (não quebrar a UI)
     return { items: [], total: 0 }
   }
 }

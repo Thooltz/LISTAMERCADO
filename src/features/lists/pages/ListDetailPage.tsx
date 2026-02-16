@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 
 const Container = styled.div`
   min-height: 100vh;
-  background: #f5f5f5;
+  background: linear-gradient(180deg, #f8f9fa 0%, #f5f5f5 100%);
   padding-bottom: 20px;
 `
 
@@ -18,9 +18,10 @@ const StickyHeader = styled.header`
   top: 0;
   background: white;
   z-index: 100;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  padding: 20px 16px;
+  border-bottom: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  backdrop-filter: blur(10px);
 `
 
 const HeaderContent = styled.div`
@@ -53,12 +54,13 @@ const BackButton = styled.button`
 `
 
 const Title = styled.h1`
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: #1a1a1a;
   flex: 1;
   margin: 0;
   line-height: 1.4;
+  letter-spacing: -0.5px;
 `
 
 const HeaderActions = styled.div`
@@ -103,35 +105,37 @@ const AddButton = styled.button`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 1rem;
-  font-weight: 600;
+  border-radius: 16px;
+  padding: 18px;
+  font-size: 1.05rem;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  transition: all 0.2s;
-  margin-bottom: 16px;
-  min-height: 52px;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 20px;
+  min-height: 56px;
+  letter-spacing: 0.3px;
 
   &:active {
-    transform: scale(0.98);
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+    transform: scale(0.97) translateY(1px);
+    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
   }
 `
 
 const StatsBar = styled.div`
-  padding: 16px;
+  padding: 20px;
   background: white;
-  border-radius: 12px;
-  margin-bottom: 16px;
+  border-radius: 18px;
+  margin-bottom: 20px;
   display: flex;
   justify-content: space-around;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 `
 
 const StatItem = styled.div`
@@ -153,32 +157,54 @@ const StatLabel = styled.div`
 const ItemsList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 `
 
 const ItemCard = styled.div<{ checked: boolean }>`
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 14px;
+  padding: 18px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: all 0.2s;
-  opacity: ${props => (props.checked ? 0.6 : 1)};
-  min-height: 64px;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: ${props => (props.checked ? 0.65 : 1)};
+  min-height: 72px;
+  border: none;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.3s;
+  }
 
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.98) translateY(1px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    
+    &::before {
+      transform: scaleY(1);
+    }
   }
 `
 
 const Checkbox = styled.input`
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   cursor: pointer;
   flex-shrink: 0;
   accent-color: #667eea;
+  border-radius: 6px;
 `
 
 const ItemContent = styled.div`
@@ -191,12 +217,14 @@ const ItemContent = styled.div`
 
 const ItemName = styled.span<{ checked: boolean }>`
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1.05rem;
   text-decoration: ${props => (props.checked ? 'line-through' : 'none')};
   color: ${props => (props.checked ? '#999' : '#1a1a1a')};
   flex: 1;
   min-width: 0;
   word-break: break-word;
+  letter-spacing: -0.2px;
+  line-height: 1.5;
 `
 
 const ItemQty = styled.span`
