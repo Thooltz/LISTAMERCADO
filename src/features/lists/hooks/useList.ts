@@ -1,34 +1,42 @@
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { MarketList } from '../types'
+import { useAuth } from '../../auth/context/AuthProvider'
+import { getLists, List } from '../../../services/listService'
 
-// TODO: Implementar serviço real quando backend estiver pronto
-async function getListById(_id: string): Promise<MarketList | null> {
-  // Mock temporário - retorna null (não encontrado)
-  // _id prefixado com _ para evitar warning de variável não usada
-  return null
-}
+export function useList(listId: string | undefined) {
+  const { user } = useAuth()
+  const uid = user?.uid
+  const [list, setList] = useState<List | null>(null)
 
-export function useList(id: string | undefined) {
   const {
-    data: list,
+    data: lists,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['list', id],
+    queryKey: ['lists', uid],
     queryFn: () => {
-      if (!id) {
-        throw new Error('ID da lista é obrigatório')
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
       }
-      return getListById(id)
+      return getLists(uid)
     },
-    enabled: !!id,
-    retry: false,
+    enabled: !!uid && !!listId,
+    staleTime: 1000 * 30,
   })
+
+  useEffect(() => {
+    if (lists && listId) {
+      const foundList = lists.find((l) => l.id === listId)
+      setList(foundList || null)
+    } else {
+      setList(null)
+    }
+  }, [lists, listId])
 
   return { 
     list, 
     isLoading, 
     error,
-    isNotFound: !isLoading && !error && !list && !!id,
+    isNotFound: !isLoading && !error && !list && !!listId,
   }
 }

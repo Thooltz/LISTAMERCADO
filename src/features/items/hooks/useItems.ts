@@ -1,37 +1,54 @@
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/context/AuthProvider'
-import { getItems, addItem, toggleItem, removeItem, updateItem } from '../../../services/listService'
+import { subscribeItems, getItems, addItem, updateItem, toggleItem, deleteItem, Item } from '../../../services/itemService'
 import toast from 'react-hot-toast'
 
-export function useItems(listId?: string) {
+export function useItems(listId: string | undefined) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const uid = user?.uid
+  const [items, setItems] = useState<Item[]>([])
 
+  // Realtime subscription
+  useEffect(() => {
+    if (!uid || !listId) {
+      setItems([])
+      return
+    }
+
+    const unsubscribe = subscribeItems(uid, listId, (newItems) => {
+      setItems(newItems)
+      // Atualizar cache do React Query também
+      queryClient.setQueryData(['items', uid, listId], newItems)
+    })
+
+    return () => unsubscribe()
+  }, [uid, listId, queryClient])
+
+  // One-time fetch para inicialização
   const {
-    data: items = [],
     isLoading,
     error,
   } = useQuery({
     queryKey: ['items', uid, listId],
     queryFn: () => {
-      if (!uid) {
-        throw new Error('Usuário não autenticado')
+      if (!uid || !listId) {
+        throw new Error('UID e listId são obrigatórios')
       }
-      return getItems(uid)
+      return getItems(uid, listId)
     },
-    enabled: !!uid,
-    staleTime: 1000 * 30,
+    enabled: !!uid && !!listId,
+    staleTime: 0, // Sempre usar realtime
+    initialData: items,
   })
 
   const createMutation = useMutation({
-    mutationFn: ({ name, qty, quantity }: { name: string; qty?: number; quantity?: number; list_id?: string; unit?: string }) => {
-      if (!uid) {
-        throw new Error('Usuário não autenticado')
+    mutationFn: (item: { name: string; qty?: number; unit?: string; category?: string }) => {
+      if (!uid || !listId) {
+        throw new Error('Usuário não autenticado ou lista não selecionada')
       }
-      // list_id e unit são ignorados pois usamos uid diretamente e Firestore não suporta unit ainda
-      const finalQty = qty || quantity || 1
-      return addItem(uid, name, finalQty)
+      return addItem(uid, listId, item)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items', uid, listId] })
@@ -44,20 +61,15 @@ export function useItems(listId?: string) {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: { name?: string; quantity?: number; qty?: number; unit?: string; category?: string } }) => {
-      if (!uid) {
-        throw new Error('Usuário não autenticado')
+    mutationFn: ({ id, updates }: { id: string; updates: { name?: string; qty?: number; unit?: string; category?: string; checked?: boolean } }) => {
+      if (!uid || !listId) {
+        throw new Error('Usuário não autenticado ou lista não selecionada')
       }
-      return updateItem(uid, id, {
-        name: input.name,
-        qty: input.qty || input.quantity,
-        quantity: input.quantity || input.qty,
-        unit: input.unit,
-        category: input.category,
-      })
+      return updateItem(uid, listId, id, updates)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items', uid, listId] })
+      toast.success('Item atualizado!')
     },
     onError: (error: any) => {
       console.error('Erro ao atualizar item:', error)
@@ -67,15 +79,15 @@ export function useItems(listId?: string) {
 
   const toggleCheckMutation = useMutation({
     mutationFn: ({ id, checked }: { id: string; checked: boolean }) => {
-      if (!uid) {
-        throw new Error('Usuário não autenticado')
+      if (!uid || !listId) {
+        throw new Error('Usuário não autenticado ou lista não selecionada')
       }
-      return toggleItem(uid, id, checked)
+      return toggleItem(uid, listId, id, checked)
     },
     onMutate: async ({ id, checked }) => {
       await queryClient.cancelQueries({ queryKey: ['items', uid, listId] })
       const previousItems = queryClient.getQueryData(['items', uid, listId])
-      queryClient.setQueryData(['items', uid, listId], (old: any[]) =>
+      queryClient.setQueryData(['items', uid, listId], (old: Item[]) =>
         old?.map(item => (item.id === id ? { ...item, checked } : item))
       )
       return { previousItems }
@@ -93,10 +105,10 @@ export function useItems(listId?: string) {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => {
-      if (!uid) {
-        throw new Error('Usuário não autenticado')
+      if (!uid || !listId) {
+        throw new Error('Usuário não autenticado ou lista não selecionada')
       }
-      return removeItem(uid, id)
+      return deleteItem(uid, listId, id)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items', uid, listId] })
@@ -107,6 +119,11 @@ export function useItems(listId?: string) {
       toast.error(error.message || 'Erro ao remover item')
     },
   })
+
+  // Contadores
+  const totalItems = items.length
+  const checkedItems = items.filter(item => item.checked).length
+  const uncheckedItems = totalItems - checkedItems
 
   return {
     items,
@@ -119,5 +136,8 @@ export function useItems(listId?: string) {
     isAdding: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    totalItems,
+    checkedItems,
+    uncheckedItems,
   }
 }

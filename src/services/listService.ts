@@ -8,192 +8,206 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
-  Timestamp,
+  onSnapshot,
+  QuerySnapshot,
   QueryDocumentSnapshot,
   DocumentData,
+  Unsubscribe,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
-export interface MarketItem {
+export interface List {
   id: string
   name: string
-  qty: number
-  quantity: number // alias para qty (compatibilidade)
-  unit?: string
-  category?: string
-  checked: boolean
-  createdAt: Timestamp | Date
+  createdAt: Date
+  updatedAt: Date
+  itemCount?: number
 }
 
 /**
- * Converte documento do Firestore para MarketItem
+ * Converte documento do Firestore para List
  */
-function docToItem(docSnap: QueryDocumentSnapshot<DocumentData>): MarketItem {
+function docToList(docSnap: QueryDocumentSnapshot<DocumentData>): List {
   const data = docSnap.data()
-  const qty = data.qty || data.quantity || 1
   return {
     id: docSnap.id,
     name: data.name || '',
-    qty: qty,
-    quantity: qty, // alias para compatibilidade
-    unit: data.unit || undefined,
-    category: data.category || undefined,
-    checked: data.checked || false,
     createdAt: data.createdAt?.toDate() || new Date(),
+    updatedAt: data.updatedAt?.toDate() || new Date(),
+    itemCount: data.itemCount || 0,
   }
 }
 
 /**
- * Obtém todos os itens do usuário
- * Ordena por createdAt desc (mais recentes primeiro)
+ * Obtém todas as listas do usuário (realtime)
  */
-export async function getItems(uid: string): Promise<MarketItem[]> {
+export function subscribeLists(
+  uid: string,
+  callback: (lists: List[]) => void
+): Unsubscribe {
+  if (!uid) {
+    throw new Error('UID do usuário é obrigatório')
+  }
+
+  const listsRef = collection(db, 'users', uid, 'lists')
+  const q = query(listsRef, orderBy('updatedAt', 'desc'))
+
+  return onSnapshot(
+    q,
+    (snapshot: QuerySnapshot<DocumentData>) => {
+      const lists = snapshot.docs.map(docToList)
+      callback(lists)
+    },
+    (error) => {
+      console.error('Erro ao buscar listas:', error)
+      callback([])
+    }
+  )
+}
+
+/**
+ * Obtém todas as listas do usuário (one-time)
+ */
+export async function getLists(uid: string): Promise<List[]> {
   try {
     if (!uid) {
       throw new Error('UID do usuário é obrigatório')
     }
 
-    const itemsRef = collection(db, 'users', uid, 'items')
-    const q = query(itemsRef, orderBy('createdAt', 'desc'))
+    const listsRef = collection(db, 'users', uid, 'lists')
+    const q = query(listsRef, orderBy('updatedAt', 'desc'))
     const querySnapshot = await getDocs(q)
 
-    return querySnapshot.docs.map(docToItem)
+    return querySnapshot.docs.map(docToList)
   } catch (error: any) {
-    console.error('Erro ao buscar itens:', error)
-    throw new Error(error.message || 'Erro ao buscar itens')
+    console.error('Erro ao buscar listas:', error)
+    throw new Error(error.message || 'Erro ao buscar listas')
   }
 }
 
 /**
- * Adiciona um novo item à lista do usuário
+ * Cria uma nova lista
  */
-export async function addItem(
-  uid: string,
-  name: string,
-  qty: number = 1
-): Promise<MarketItem> {
+export async function createList(uid: string, name: string): Promise<List> {
   try {
     if (!uid) {
       throw new Error('UID do usuário é obrigatório')
     }
     if (!name || !name.trim()) {
-      throw new Error('Nome do item é obrigatório')
-    }
-    if (qty < 1) {
-      throw new Error('Quantidade deve ser maior que zero')
+      throw new Error('Nome da lista é obrigatório')
     }
 
-    const itemsRef = collection(db, 'users', uid, 'items')
-    const docRef = await addDoc(itemsRef, {
+    const listsRef = collection(db, 'users', uid, 'lists')
+    const docRef = await addDoc(listsRef, {
       name: name.trim(),
-      qty: qty,
-      checked: false,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      itemCount: 0,
     })
 
-    // Retornar o item criado (o createdAt será atualizado quando o documento for lido novamente)
+    // Buscar o documento criado
+    const docSnap = await getDocs(
+      query(listsRef, orderBy('updatedAt', 'desc'))
+    )
+    const createdList = docSnap.docs.find((d) => d.id === docRef.id)
+
+    if (createdList) {
+      return docToList(createdList)
+    }
+
+    // Fallback se não encontrar
     return {
       id: docRef.id,
       name: name.trim(),
-      qty: qty,
-      quantity: qty, // alias para compatibilidade
-      unit: undefined,
-      category: undefined,
-      checked: false,
       createdAt: new Date(),
+      updatedAt: new Date(),
+      itemCount: 0,
     }
   } catch (error: any) {
-    console.error('Erro ao adicionar item:', error)
-    throw new Error(error.message || 'Erro ao adicionar item')
+    console.error('Erro ao criar lista:', error)
+    throw new Error(error.message || 'Erro ao criar lista')
   }
 }
 
 /**
- * Alterna o estado checked de um item
+ * Renomeia uma lista
  */
-export async function toggleItem(
+export async function renameList(
   uid: string,
-  itemId: string,
-  checked: boolean
+  listId: string,
+  name: string
 ): Promise<void> {
   try {
     if (!uid) {
       throw new Error('UID do usuário é obrigatório')
     }
-    if (!itemId) {
-      throw new Error('ID do item é obrigatório')
+    if (!listId) {
+      throw new Error('ID da lista é obrigatório')
+    }
+    if (!name || !name.trim()) {
+      throw new Error('Nome da lista é obrigatório')
     }
 
-    const itemRef = doc(db, 'users', uid, 'items', itemId)
-    await updateDoc(itemRef, {
-      checked: checked,
+    const listRef = doc(db, 'users', uid, 'lists', listId)
+    await updateDoc(listRef, {
+      name: name.trim(),
+      updatedAt: serverTimestamp(),
     })
   } catch (error: any) {
-    console.error('Erro ao atualizar item:', error)
-    throw new Error(error.message || 'Erro ao atualizar item')
+    console.error('Erro ao renomear lista:', error)
+    throw new Error(error.message || 'Erro ao renomear lista')
   }
 }
 
 /**
- * Atualiza um item (nome, quantidade, etc)
+ * Deleta uma lista (e todos os seus itens)
  */
-export async function updateItem(
-  uid: string,
-  itemId: string,
-  updates: {
-    name?: string
-    qty?: number
-    quantity?: number
-    unit?: string
-    category?: string
+export async function deleteList(uid: string, listId: string): Promise<void> {
+  try {
+    if (!uid) {
+      throw new Error('UID do usuário é obrigatório')
+    }
+    if (!listId) {
+      throw new Error('ID da lista é obrigatório')
+    }
+
+    // Deletar todos os itens da lista primeiro
+    const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+    const itemsSnapshot = await getDocs(itemsRef)
+    
+    const deletePromises = itemsSnapshot.docs.map((itemDoc) =>
+      deleteDoc(doc(db, 'users', uid, 'lists', listId, 'items', itemDoc.id))
+    )
+    
+    await Promise.all(deletePromises)
+
+    // Deletar a lista
+    const listRef = doc(db, 'users', uid, 'lists', listId)
+    await deleteDoc(listRef)
+  } catch (error: any) {
+    console.error('Erro ao deletar lista:', error)
+    throw new Error(error.message || 'Erro ao deletar lista')
   }
+}
+
+/**
+ * Atualiza o contador de itens de uma lista
+ */
+export async function updateItemCount(
+  uid: string,
+  listId: string,
+  count: number
 ): Promise<void> {
   try {
-    if (!uid) {
-      throw new Error('UID do usuário é obrigatório')
-    }
-    if (!itemId) {
-      throw new Error('ID do item é obrigatório')
-    }
+    if (!uid || !listId) return
 
-    const itemRef = doc(db, 'users', uid, 'items', itemId)
-    const updateData: any = {}
-    
-    if (updates.name !== undefined) updateData.name = updates.name.trim()
-    if (updates.qty !== undefined) {
-      updateData.qty = updates.qty
-      updateData.quantity = updates.qty // manter ambos para compatibilidade
-    }
-    if (updates.quantity !== undefined && updates.qty === undefined) {
-      updateData.qty = updates.quantity
-      updateData.quantity = updates.quantity
-    }
-    if (updates.unit !== undefined) updateData.unit = updates.unit
-    if (updates.category !== undefined) updateData.category = updates.category
-
-    await updateDoc(itemRef, updateData)
+    const listRef = doc(db, 'users', uid, 'lists', listId)
+    await updateDoc(listRef, {
+      itemCount: count,
+      updatedAt: serverTimestamp(),
+    })
   } catch (error: any) {
-    console.error('Erro ao atualizar item:', error)
-    throw new Error(error.message || 'Erro ao atualizar item')
-  }
-}
-
-/**
- * Remove um item da lista
- */
-export async function removeItem(uid: string, itemId: string): Promise<void> {
-  try {
-    if (!uid) {
-      throw new Error('UID do usuário é obrigatório')
-    }
-    if (!itemId) {
-      throw new Error('ID do item é obrigatório')
-    }
-
-    const itemRef = doc(db, 'users', uid, 'items', itemId)
-    await deleteDoc(itemRef)
-  } catch (error: any) {
-    console.error('Erro ao remover item:', error)
-    throw new Error(error.message || 'Erro ao remover item')
+    console.error('Erro ao atualizar contador:', error)
+    // Não lançar erro, é opcional
   }
 }

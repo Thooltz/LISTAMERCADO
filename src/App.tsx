@@ -3,6 +3,7 @@ import { useAuth } from './features/auth/context/AuthProvider'
 import Landing from './features/auth/pages/Landing'
 import Auth from './features/auth/pages/Auth'
 import ListsPage from './features/lists/pages/ListsPage'
+import ListDetailPage from './features/lists/pages/ListDetailPage'
 import Settings from './features/settings/pages/Settings'
 import LoadingSpinner from './shared/components/LoadingSpinner'
 
@@ -34,6 +35,14 @@ function App() {
         element={user ? <Navigate to="/lists" replace /> : <Landing />}
       />
       <Route
+        path="/login"
+        element={user ? <Navigate to="/lists" replace /> : <Auth />}
+      />
+      <Route
+        path="/login"
+        element={user ? <Navigate to="/lists" replace /> : <Auth />}
+      />
+      <Route
         path="/auth"
         element={user ? <Navigate to="/lists" replace /> : <Auth />}
       />
@@ -42,6 +51,14 @@ function App() {
         element={
           <PrivateRoute>
             <ListsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/lists/:listId"
+        element={
+          <PrivateRoute>
+            <ListDetailPage />
           </PrivateRoute>
         }
       />

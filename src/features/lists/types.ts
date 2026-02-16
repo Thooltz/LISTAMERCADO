@@ -1,17 +1,4 @@
-export interface MarketList {
-  id: string
-  title: string
-  created_at: string
-  updated_at: string
-}
-
-export interface MarketItem {
-  id: string
-  name: string
-  qty: number
-  quantity: number // alias para qty (compatibilidade)
-  unit?: string
-  category?: string
-  checked: boolean
-  createdAt: Date | string
-}
+// Tipos re-exportados dos serviços
+// Caminho: src/features/lists/types.ts -> src/services/listService.ts
+export type { List } from '../../services/listService'
+export type { Item } from '../../services/itemService'

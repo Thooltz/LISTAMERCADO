@@ -1,60 +1,58 @@
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../auth/context/AuthProvider'
-import { MarketList } from '../types'
+import { subscribeLists, getLists, createList, renameList, deleteList, List } from '../../../services/listService'
 import toast from 'react-hot-toast'
-
-// TODO: Implementar serviço real de listas quando backend estiver pronto
-// Por enquanto, retorna array vazio para compilar
-async function getLists(): Promise<MarketList[]> {
-  // Mock temporário - retorna array vazio
-  return []
-}
-
-async function createList(title: string): Promise<MarketList> {
-  // Mock temporário - retorna lista fake
-  return {
-    id: `temp-${Date.now()}`,
-    title,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-}
-
-async function renameList(id: string, title: string): Promise<MarketList> {
-  // Mock temporário
-  return {
-    id,
-    title,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-}
-
-async function deleteList(id: string): Promise<void> {
-  // Mock temporário
-  console.log('TODO: Implementar deleteList', id)
-}
 
 export function useLists() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const uid = user?.uid
+  const [lists, setLists] = useState<List[]>([])
 
+  // Realtime subscription
+  useEffect(() => {
+    if (!uid) {
+      setLists([])
+      return
+    }
+
+    const unsubscribe = subscribeLists(uid, (newLists) => {
+      setLists(newLists)
+      // Atualizar cache do React Query também
+      queryClient.setQueryData(['lists', uid], newLists)
+    })
+
+    return () => unsubscribe()
+  }, [uid, queryClient])
+
+  // One-time fetch para inicialização
   const {
-    data: lists = [],
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['lists', user?.uid],
-    queryFn: getLists,
-    enabled: !!user,
-    staleTime: 1000 * 30,
+    queryKey: ['lists', uid],
+    queryFn: () => {
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
+      }
+      return getLists(uid)
+    },
+    enabled: !!uid,
+    staleTime: 0, // Sempre usar realtime
+    initialData: lists,
   })
 
   const createMutation = useMutation({
-    mutationFn: (title: string) => createList(title),
+    mutationFn: (name: string) => {
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
+      }
+      return createList(uid, name)
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lists', user?.uid] })
+      queryClient.invalidateQueries({ queryKey: ['lists', uid] })
       toast.success('Lista criada com sucesso!')
     },
     onError: (error: any) => {
@@ -64,10 +62,14 @@ export function useLists() {
   })
 
   const renameMutation = useMutation({
-    mutationFn: ({ id, title }: { id: string; title: string }) =>
-      renameList(id, title),
+    mutationFn: ({ id, name }: { id: string; name: string }) => {
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
+      }
+      return renameList(uid, id, name)
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lists', user?.uid] })
+      queryClient.invalidateQueries({ queryKey: ['lists', uid] })
       queryClient.invalidateQueries({ queryKey: ['list'] })
       toast.success('Lista renomeada!')
     },
@@ -78,9 +80,14 @@ export function useLists() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteList(id),
+    mutationFn: (id: string) => {
+      if (!uid) {
+        throw new Error('Usuário não autenticado')
+      }
+      return deleteList(uid, id)
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lists', user?.uid] })
+      queryClient.invalidateQueries({ queryKey: ['lists', uid] })
       queryClient.invalidateQueries({ queryKey: ['items'] })
       toast.success('Lista deletada!')
     },
