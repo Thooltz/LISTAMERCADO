@@ -231,10 +231,10 @@ function ListDetailsPage() {
   const handleAddItem = async (name: string, quantity?: number, unit?: string) => {
     if (!id) return
     await addItem({
-      list_id: id,
       name,
       quantity,
       unit,
+      list_id: id, // ignorado mas mantido para compatibilidade
     })
   }
 

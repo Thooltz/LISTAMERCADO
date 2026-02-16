@@ -1,6 +1,8 @@
-export interface User {
-  uid: string
-  email: string | null
+export interface MarketList {
+  id: string
+  title: string
+  created_at: string
+  updated_at: string
 }
 
 export interface MarketItem {
@@ -11,5 +13,5 @@ export interface MarketItem {
   unit?: string
   category?: string
   checked: boolean
-  createdAt: Date
+  createdAt: Date | string
 }

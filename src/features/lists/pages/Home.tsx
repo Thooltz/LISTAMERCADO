@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthProvider'
 import { useLists } from '../hooks/useLists'
+import { MarketList } from '../types'
 import styled from 'styled-components'
 import LoadingSpinner from '../../../shared/components/LoadingSpinner'
 
@@ -328,7 +329,7 @@ function Home() {
         </EmptyState>
       ) : (
         <ListsGrid>
-          {lists.map(list => (
+          {lists.map((list: MarketList) => (
             <ListCard key={list.id} onClick={() => navigate(`/lists/${list.id}`)}>
               <ListTitle>{list.title}</ListTitle>
               <ListMeta>

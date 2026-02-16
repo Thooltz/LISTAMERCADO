@@ -261,9 +261,9 @@ function ListDetail() {
 
     try {
       await addItem({
-        list_id: id,
         name: itemName.trim(),
         quantity: parseInt(itemQuantity) || 1,
+        list_id: id, // ignorado mas mantido para compatibilidade
       })
       setItemName('')
       setItemQuantity('1')

@@ -18,6 +18,9 @@ export interface MarketItem {
   id: string
   name: string
   qty: number
+  quantity: number // alias para qty (compatibilidade)
+  unit?: string
+  category?: string
   checked: boolean
   createdAt: Timestamp | Date
 }
@@ -27,10 +30,14 @@ export interface MarketItem {
  */
 function docToItem(docSnap: QueryDocumentSnapshot<DocumentData>): MarketItem {
   const data = docSnap.data()
+  const qty = data.qty || data.quantity || 1
   return {
     id: docSnap.id,
     name: data.name || '',
-    qty: data.qty || 1,
+    qty: qty,
+    quantity: qty, // alias para compatibilidade
+    unit: data.unit || undefined,
+    category: data.category || undefined,
     checked: data.checked || false,
     createdAt: data.createdAt?.toDate() || new Date(),
   }
@@ -89,6 +96,9 @@ export async function addItem(
       id: docRef.id,
       name: name.trim(),
       qty: qty,
+      quantity: qty, // alias para compatibilidade
+      unit: undefined,
+      category: undefined,
       checked: false,
       createdAt: new Date(),
     }
@@ -118,6 +128,50 @@ export async function toggleItem(
     await updateDoc(itemRef, {
       checked: checked,
     })
+  } catch (error: any) {
+    console.error('Erro ao atualizar item:', error)
+    throw new Error(error.message || 'Erro ao atualizar item')
+  }
+}
+
+/**
+ * Atualiza um item (nome, quantidade, etc)
+ */
+export async function updateItem(
+  uid: string,
+  itemId: string,
+  updates: {
+    name?: string
+    qty?: number
+    quantity?: number
+    unit?: string
+    category?: string
+  }
+): Promise<void> {
+  try {
+    if (!uid) {
+      throw new Error('UID do usuário é obrigatório')
+    }
+    if (!itemId) {
+      throw new Error('ID do item é obrigatório')
+    }
+
+    const itemRef = doc(db, 'users', uid, 'items', itemId)
+    const updateData: any = {}
+    
+    if (updates.name !== undefined) updateData.name = updates.name.trim()
+    if (updates.qty !== undefined) {
+      updateData.qty = updates.qty
+      updateData.quantity = updates.qty // manter ambos para compatibilidade
+    }
+    if (updates.quantity !== undefined && updates.qty === undefined) {
+      updateData.qty = updates.quantity
+      updateData.quantity = updates.quantity
+    }
+    if (updates.unit !== undefined) updateData.unit = updates.unit
+    if (updates.category !== undefined) updateData.category = updates.category
+
+    await updateDoc(itemRef, updateData)
   } catch (error: any) {
     console.error('Erro ao atualizar item:', error)
     throw new Error(error.message || 'Erro ao atualizar item')
