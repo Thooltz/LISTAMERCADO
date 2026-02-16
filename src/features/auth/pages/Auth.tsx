@@ -21,8 +21,19 @@ const Container = styled.div`
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
     animation: pulse 20s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -30%;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(118, 75, 162, 0.2) 0%, transparent 70%);
+    animation: pulse 25s ease-in-out infinite reverse;
   }
 
   @keyframes pulse {
@@ -33,18 +44,21 @@ const Container = styled.div`
 
 const Card = styled.div`
   width: 100%;
-  max-width: 420px;
-  background: white;
-  border-radius: 24px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-radius: 32px;
+  padding: 48px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255, 255, 255, 0.3);
   position: relative;
   z-index: 1;
-  backdrop-filter: blur(10px);
+  animation: scaleIn 0.5s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 
   @media (max-width: 480px) {
-    padding: 32px 24px;
-    border-radius: 20px;
+    padding: 36px 24px;
+    border-radius: 28px;
   }
 `
 
@@ -79,26 +93,29 @@ const Tabs = styled.div`
   display: flex;
   gap: 8px;
   margin-bottom: 32px;
-  background: #f5f5f5;
-  padding: 4px;
-  border-radius: 12px;
+  background: rgba(245, 245, 245, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 6px;
+  border-radius: 16px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
 `
 
 const Tab = styled.button<{ $active: boolean }>`
   flex: 1;
-  padding: 12px;
+  padding: 14px;
   background: ${props => props.$active ? 'white' : 'transparent'};
   border: none;
   font-size: 1rem;
-  font-weight: ${props => (props.$active ? '600' : '500')};
+  font-weight: ${props => (props.$active ? '700' : '500')};
   color: ${props => (props.$active ? '#667eea' : '#999')};
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 12px;
+  transition: all var(--transition-base);
   cursor: pointer;
-  box-shadow: ${props => props.$active ? '0 2px 8px rgba(102, 126, 234, 0.2)' : 'none'};
+  box-shadow: ${props => props.$active ? '0 4px 12px rgba(102, 126, 234, 0.25)' : 'none'};
+  position: relative;
 
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.96);
   }
 `
 
@@ -122,19 +139,22 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
+  padding: 18px;
+  border: 2px solid rgba(224, 224, 224, 0.5);
+  border-radius: 16px;
   font-size: 1rem;
-  transition: all 0.2s;
-  background: #fafafa;
+  transition: all var(--transition-base);
+  background: rgba(250, 250, 250, 0.8);
+  backdrop-filter: blur(10px);
   color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
   &:focus {
     border-color: #667eea;
     outline: none;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.2);
+    transform: translateY(-1px);
   }
 
   &::placeholder {
@@ -144,22 +164,43 @@ const Input = styled.input`
 
 const Button = styled.button<{ $loading?: boolean }>`
   width: 100%;
-  padding: 16px;
+  padding: 18px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   border: none;
-  border-radius: 12px;
-  transition: all 0.2s;
+  border-radius: 16px;
+  transition: all var(--transition-bounce);
   cursor: ${props => (props.$loading ? 'not-allowed' : 'pointer')};
   opacity: ${props => (props.$loading ? 0.7 : 1)};
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  min-height: 52px;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0);
+  min-height: 56px;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
 
   &:active:not(:disabled) {
-    transform: scale(0.98);
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+    transform: scale(0.95);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5), 0 0 0 4px rgba(102, 126, 234, 0.2);
+    
+    &::before {
+      width: 400px;
+      height: 400px;
+    }
   }
 
   &:disabled {

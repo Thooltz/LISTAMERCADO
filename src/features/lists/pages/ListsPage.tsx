@@ -9,19 +9,53 @@ import toast from 'react-hot-toast'
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8f9fa 0%, #f5f5f5 100%);
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 50%, #f8f9fa 100%);
   padding-bottom: 20px;
+  position: relative;
+  overflow-x: hidden;
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: float 20s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '';
+    position: fixed;
+    bottom: -30%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(118, 75, 162, 0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: float 25s ease-in-out infinite reverse;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -30px) scale(1.1); }
+  }
 `
 
 const Header = styled.header`
-  background: white;
-  padding: 20px 16px;
-  border-bottom: none;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 `
 
 const HeaderContent = styled.div`
@@ -52,19 +86,39 @@ const AddButton = styled.button`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 14px;
-  padding: 12px 20px;
-  font-size: 0.95rem;
+  border-radius: 16px;
+  padding: 14px 24px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 48px;
-  letter-spacing: 0.3px;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 52px;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
 
   &:active {
-    transform: scale(0.96) translateY(1px);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    transform: scale(0.95);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5), 0 0 0 4px rgba(102, 126, 234, 0.2);
+    
+    &::before {
+      width: 300px;
+      height: 300px;
+    }
   }
 
   &:disabled {
@@ -75,47 +129,54 @@ const AddButton = styled.button`
 `
 
 const LogoutButton = styled.button`
-  background: #f5f5f5;
-  border: none;
-  border-radius: 12px;
-  padding: 10px;
-  font-size: 1.2rem;
+  background: rgba(245, 245, 245, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 1.3rem;
   cursor: pointer;
   color: #666;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 48px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   &:active {
-    background: #e0e0e0;
-    transform: scale(0.95);
+    background: rgba(231, 76, 60, 0.1);
+    transform: scale(0.92) rotate(5deg);
     color: #e74c3c;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
   }
 `
 
 const Content = styled.div`
   max-width: 600px;
   margin: 0 auto;
-  padding: 20px 16px;
+  padding: 24px 20px;
+  position: relative;
+  z-index: 1;
 `
 
 const ListsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 `
 
 const ListCard = styled.div`
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
 
@@ -125,19 +186,35 @@ const ListCard = styled.div`
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
+    height: 5px;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 0.3s;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
   }
 
   &:active {
-    transform: scale(0.98) translateY(2px);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    transform: scale(0.97) translateY(4px);
+    box-shadow: 0 4px 24px rgba(102, 126, 234, 0.2), 0 0 0 1px rgba(102, 126, 234, 0.1);
     
     &::before {
       transform: scaleX(1);
+    }
+
+    &::after {
+      opacity: 1;
     }
   }
 `
@@ -150,13 +227,17 @@ const ListHeader = styled.div`
 `
 
 const ListTitle = styled.h3`
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
   color: #1a1a1a;
   flex: 1;
   margin: 0;
   line-height: 1.5;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.4px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `
 
 const ListActions = styled.div`
@@ -166,76 +247,95 @@ const ListActions = styled.div`
 `
 
 const IconButton = styled.button`
-  background: #f8f9fa;
-  border: none;
-  font-size: 1.15rem;
+  background: rgba(248, 249, 250, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 1.2rem;
   cursor: pointer;
   color: #666;
-  padding: 10px;
-  min-width: 40px;
-  min-height: 40px;
+  padding: 12px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   &:active {
-    background: #e9ecef;
-    transform: scale(0.92);
+    background: rgba(233, 236, 239, 0.9);
+    transform: scale(0.9) rotate(5deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   &.danger:active {
     color: #e74c3c;
-    background: #fee;
+    background: rgba(254, 238, 238, 0.9);
+    transform: scale(0.9) rotate(-5deg);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
   }
 `
 
 const ItemsPreview = styled.div`
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 `
 
 const PreviewItem = styled.div`
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #555;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   line-height: 1.6;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  transition: all 0.2s;
   
   &:last-child {
     margin-bottom: 0;
   }
+
+  &:hover {
+    color: #667eea;
+    transform: translateX(4px);
+  }
 `
 
 const PreviewMore = styled.div`
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #999;
   font-style: italic;
-  margin-top: 8px;
-  font-weight: 500;
+  margin-top: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 `
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: 80px 20px;
+  padding: 100px 20px;
   color: #999;
+  position: relative;
 `
 
 const EmptyTitle = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: 16px;
+  font-size: 1.75rem;
+  margin-bottom: 20px;
   color: #666;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `
 
 const EmptyText = styled.p`
-  margin-bottom: 32px;
-  font-size: 1rem;
+  margin-bottom: 40px;
+  font-size: 1.05rem;
   color: #888;
-  line-height: 1.6;
+  line-height: 1.7;
+  font-weight: 500;
 `
 
 // Modal

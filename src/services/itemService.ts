@@ -21,6 +21,8 @@ export interface Item {
   name: string
   checked: boolean
   qty: number
+  unit?: string
+  category?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -35,6 +37,8 @@ function docToItem(docSnap: QueryDocumentSnapshot<DocumentData>): Item {
     name: data.name || '',
     checked: data.checked || false,
     qty: data.qty || 1,
+    unit: data.unit,
+    category: data.category,
     createdAt: data.createdAt?.toDate() || new Date(),
     updatedAt: data.updatedAt?.toDate() || new Date(),
   }
@@ -248,6 +252,8 @@ export async function addItem(
   item: {
     name: string
     qty?: number
+    unit?: string
+    category?: string
   }
 ): Promise<Item> {
   try {
@@ -261,13 +267,22 @@ export async function addItem(
     const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
     const qty = item.qty && item.qty > 0 ? item.qty : 1
     
-    const docRef = await addDoc(itemsRef, {
+    const docData: any = {
       name: item.name.trim(),
       checked: false,
       qty: qty,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    })
+    }
+    
+    if (item.unit) {
+      docData.unit = item.unit
+    }
+    if (item.category) {
+      docData.category = item.category
+    }
+    
+    const docRef = await addDoc(itemsRef, docData)
 
     // Atualizar contador de itens
     const itemsSnapshot = await getDocs(itemsRef)
@@ -279,6 +294,8 @@ export async function addItem(
       name: item.name.trim(),
       checked: false,
       qty: qty,
+      unit: item.unit,
+      category: item.category,
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -299,6 +316,8 @@ export async function updateItem(
     name?: string
     qty?: number
     checked?: boolean
+    unit?: string
+    category?: string
   }
 ): Promise<void> {
   try {
@@ -314,6 +333,8 @@ export async function updateItem(
     if (updates.name !== undefined) updateData.name = updates.name.trim()
     if (updates.qty !== undefined) updateData.qty = updates.qty > 0 ? updates.qty : 1
     if (updates.checked !== undefined) updateData.checked = updates.checked
+    if (updates.unit !== undefined) updateData.unit = updates.unit || null
+    if (updates.category !== undefined) updateData.category = updates.category || null
 
     await updateDoc(itemRef, updateData)
   } catch (error: any) {

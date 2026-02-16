@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useList } from '../hooks/useList'
 import { useItems } from '../../items/hooks/useItems'
@@ -6,22 +6,60 @@ import { useLists } from '../hooks/useLists'
 import styled from 'styled-components'
 import LoadingSpinner from '../../../shared/components/LoadingSpinner'
 import toast from 'react-hot-toast'
+import { getSuggestion, getDefaultUnit } from '../../../shared/utils/suggestions'
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8f9fa 0%, #f5f5f5 100%);
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 50%, #f8f9fa 100%);
   padding-bottom: 20px;
+  position: relative;
+  overflow-x: hidden;
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: float 20s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  &::after {
+    content: '';
+    position: fixed;
+    bottom: -30%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(118, 75, 162, 0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: float 25s ease-in-out infinite reverse;
+    z-index: 0;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -30px) scale(1.1); }
+  }
 `
 
 const StickyHeader = styled.header`
   position: sticky;
   top: 0;
-  background: white;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   z-index: 100;
   padding: 20px 16px;
-  border-bottom: none;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  transition: all var(--transition-base);
 `
 
 const HeaderContent = styled.div`
@@ -33,23 +71,26 @@ const HeaderContent = styled.div`
 `
 
 const BackButton = styled.button`
-  background: #f5f5f5;
-  border: none;
+  background: rgba(245, 245, 245, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 1.3rem;
   cursor: pointer;
   color: #1a1a1a;
   padding: 8px;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  transition: all 0.2s;
+  border-radius: 12px;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   &:active {
-    background: #e0e0e0;
-    transform: scale(0.95);
+    background: rgba(233, 236, 239, 0.9);
+    transform: scale(0.92) rotate(-5deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 `
 
@@ -61,6 +102,10 @@ const Title = styled.h1`
   margin: 0;
   line-height: 1.4;
   letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `
 
 const HeaderActions = styled.div`
@@ -69,28 +114,33 @@ const HeaderActions = styled.div`
 `
 
 const IconButton = styled.button`
-  background: #f5f5f5;
-  border: none;
+  background: rgba(248, 249, 250, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 1.1rem;
   cursor: pointer;
   color: #666;
   padding: 8px;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  transition: all 0.2s;
+  border-radius: 12px;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   &:active {
-    background: #e0e0e0;
-    transform: scale(0.95);
+    background: rgba(233, 236, 239, 0.9);
+    transform: scale(0.9) rotate(5deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   &.danger:active {
     color: #e74c3c;
-    background: #fee;
+    background: rgba(254, 238, 238, 0.9);
+    transform: scale(0.9) rotate(-5deg);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
   }
 `
 
@@ -98,6 +148,8 @@ const Content = styled.div`
   max-width: 600px;
   margin: 0 auto;
   padding: 16px;
+  position: relative;
+  z-index: 1;
 `
 
 const AddButton = styled.button`
@@ -105,20 +157,40 @@ const AddButton = styled.button`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 18px;
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0);
+  transition: all var(--transition-bounce);
   margin-bottom: 20px;
   min-height: 56px;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
 
   &:active {
-    transform: scale(0.97) translateY(1px);
-    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
+    transform: scale(0.95);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5), 0 0 0 4px rgba(102, 126, 234, 0.2);
+    
+    &::before {
+      width: 300px;
+      height: 300px;
+    }
   }
 
   &:disabled {
@@ -129,13 +201,17 @@ const AddButton = styled.button`
 `
 
 const StatsBar = styled.div`
-  padding: 20px;
-  background: white;
-  border-radius: 18px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 24px;
   margin-bottom: 20px;
   display: flex;
   justify-content: space-around;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-glass);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: fadeIn 0.5s ease-out;
 `
 
 const StatItem = styled.div`
@@ -143,10 +219,13 @@ const StatItem = styled.div`
 `
 
 const StatValue = styled.div`
-  font-weight: 700;
-  font-size: 1.3rem;
-  color: #1a1a1a;
-  margin-bottom: 4px;
+  font-weight: 800;
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
 `
 
 const StatLabel = styled.div`
@@ -164,16 +243,19 @@ const ItemCard = styled.div<{ checked: boolean }>`
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 18px;
-  background: white;
-  border-radius: 18px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 20px;
+  box-shadow: var(--shadow-glass);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all var(--transition-slow);
   opacity: ${props => (props.checked ? 0.65 : 1)};
-  min-height: 72px;
-  border: none;
+  min-height: 76px;
   position: relative;
   overflow: hidden;
+  animation: slideUp 0.4s ease-out;
 
   &::before {
     content: '';
@@ -181,19 +263,36 @@ const ItemCard = styled.div<{ checked: boolean }>`
     left: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
+    width: 5px;
     background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
     transform: scaleY(0);
     transform-origin: top;
-    transition: transform 0.3s;
+    transition: transform var(--transition-base);
+    border-radius: 0 4px 4px 0;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity var(--transition-base);
   }
 
   &:active {
-    transform: scale(0.98) translateY(1px);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    transform: scale(0.97) translateY(2px);
+    box-shadow: 0 4px 24px rgba(102, 126, 234, 0.2), 0 0 0 1px rgba(102, 126, 234, 0.1);
     
     &::before {
       transform: scaleY(1);
+    }
+
+    &::after {
+      opacity: 1;
     }
   }
 `
@@ -233,6 +332,44 @@ const ItemQty = styled.span`
   white-space: nowrap;
 `
 
+const UnitBadge = styled.div<{ $isUn?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: ${props => props.$isUn ? '8px 14px' : '6px 12px'};
+  background: ${props => props.$isUn 
+    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+    : 'linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%)'};
+  color: ${props => props.$isUn ? '#ffffff' : '#667eea'};
+  font-size: ${props => props.$isUn ? '0.95rem' : '0.85rem'};
+  font-weight: ${props => props.$isUn ? '700' : '600'};
+  border-radius: ${props => props.$isUn ? '12px' : '10px'};
+  white-space: nowrap;
+  box-shadow: ${props => props.$isUn 
+    ? '0 2px 8px rgba(102, 126, 234, 0.3)' 
+    : '0 1px 4px rgba(102, 126, 234, 0.15)'};
+  min-width: ${props => props.$isUn ? '48px' : '40px'};
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+  
+  @media (max-width: 480px) {
+    padding: ${props => props.$isUn ? '10px 16px' : '8px 14px'};
+    font-size: ${props => props.$isUn ? '1rem' : '0.9rem'};
+    min-width: ${props => props.$isUn ? '52px' : '44px'};
+  }
+`
+
+const QtyAndUnitContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  
+  @media (max-width: 480px) {
+    gap: 10px;
+  }
+`
+
 const ItemActions = styled.div`
   display: flex;
   gap: 8px;
@@ -240,28 +377,33 @@ const ItemActions = styled.div`
 `
 
 const ActionButton = styled.button`
-  background: #f5f5f5;
-  border: none;
+  background: rgba(248, 249, 250, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 1.1rem;
   cursor: pointer;
   color: #666;
   padding: 8px;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 40px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 10px;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   &:active {
-    background: #e0e0e0;
-    transform: scale(0.95);
+    background: rgba(233, 236, 239, 0.9);
+    transform: scale(0.9) rotate(5deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   &.danger:active {
     color: #e74c3c;
-    background: #fee;
+    background: rgba(254, 238, 238, 0.9);
+    transform: scale(0.9) rotate(-5deg);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
   }
 `
 
@@ -313,21 +455,24 @@ const BottomSheet = styled.div<{ $show: boolean }>`
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-radius: 24px 24px 0 0;
-  padding: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-radius: 28px 28px 0 0;
+  padding: 28px;
   max-height: 85vh;
   overflow-y: auto;
   z-index: 1000;
   transform: ${props => (props.$show ? 'translateY(0)' : 'translateY(100%)')};
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  transition: transform var(--transition-slow);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
 
   @media (min-width: 768px) {
-    max-width: 500px;
+    max-width: 520px;
     left: 50%;
     transform: ${props => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)')};
-    border-radius: 24px;
+    border-radius: 28px;
   }
 `
 
@@ -345,23 +490,26 @@ const ModalTitle = styled.h2`
 `
 
 const CloseButton = styled.button`
-  background: #f5f5f5;
-  border: none;
+  background: rgba(245, 245, 245, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 1.5rem;
   cursor: pointer;
   color: #666;
   padding: 8px;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 12px;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   &:active {
-    background: #e0e0e0;
-    transform: scale(0.95);
+    background: rgba(233, 236, 239, 0.9);
+    transform: scale(0.9) rotate(90deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 `
 
@@ -379,19 +527,46 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 14px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid rgba(224, 224, 224, 0.5);
+  border-radius: 16px;
   font-size: 1rem;
-  background: #fafafa;
+  background: rgba(250, 250, 250, 0.8);
+  backdrop-filter: blur(10px);
   color: #1a1a1a;
-  min-height: 48px;
-  transition: all 0.2s;
+  min-height: 52px;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
   &:focus {
     border-color: #667eea;
     outline: none;
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
+    transform: translateY(-1px);
+  }
+`
+
+const Select = styled.select`
+  width: 100%;
+  padding: 16px;
+  border: 2px solid rgba(224, 224, 224, 0.5);
+  border-radius: 16px;
+  font-size: 1rem;
+  background: rgba(250, 250, 250, 0.8);
+  backdrop-filter: blur(10px);
+  color: #1a1a1a;
+  min-height: 52px;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  &:focus {
+    border-color: #667eea;
+    outline: none;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
+    transform: translateY(-1px);
   }
 `
 
@@ -403,23 +578,34 @@ const ModalActions = styled.div`
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   flex: 1;
-  padding: 14px;
+  padding: 16px;
   background: ${props => {
     if (props.$variant === 'primary') return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    if (props.$variant === 'danger') return '#e74c3c'
-    return '#f5f5f5'
+    if (props.$variant === 'danger') return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+    return 'rgba(245, 245, 245, 0.8)'
   }};
   color: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'white' : '#1a1a1a')};
-  border: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'none' : '2px solid #e0e0e0')};
-  border-radius: 12px;
+  border: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'none' : '2px solid rgba(224, 224, 224, 0.5)')};
+  border-radius: 16px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  min-height: 48px;
+  transition: all var(--transition-base);
+  min-height: 52px;
+  backdrop-filter: ${props => props.$variant === 'secondary' ? 'blur(10px)' : 'none'};
+  box-shadow: ${props => {
+    if (props.$variant === 'primary') return '0 4px 12px rgba(102, 126, 234, 0.3)'
+    if (props.$variant === 'danger') return '0 4px 12px rgba(239, 68, 68, 0.3)'
+    return '0 2px 8px rgba(0, 0, 0, 0.05)'
+  }};
 
   &:active:not(:disabled) {
-    transform: scale(0.98);
+    transform: scale(0.96);
+    box-shadow: ${props => {
+      if (props.$variant === 'primary') return '0 2px 8px rgba(102, 126, 234, 0.4), 0 0 0 3px rgba(102, 126, 234, 0.2)'
+      if (props.$variant === 'danger') return '0 2px 8px rgba(239, 68, 68, 0.4), 0 0 0 3px rgba(239, 68, 68, 0.2)'
+      return '0 1px 4px rgba(0, 0, 0, 0.1)'
+    }};
   }
 
   &:disabled {
@@ -443,8 +629,24 @@ function ListDetailPage() {
   
   const [itemName, setItemName] = useState('')
   const [itemQty, setItemQty] = useState('1')
+  const [itemUnit, setItemUnit] = useState('un')
+  const [itemCategory, setItemCategory] = useState('')
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [listName, setListName] = useState('')
+
+  // Sugestões automáticas quando o nome do item muda
+  useEffect(() => {
+    if (itemName.trim() && !editingItemId) {
+      const suggestion = getSuggestion(itemName.trim())
+      if (suggestion) {
+        setItemUnit(suggestion.unit)
+        setItemCategory(suggestion.category)
+      } else {
+        setItemUnit(getDefaultUnit())
+        setItemCategory('')
+      }
+    }
+  }, [itemName, editingItemId])
 
   // Redirecionar se não tiver listId
   if (!listId) {
@@ -463,9 +665,13 @@ function ListDetailPage() {
       await addItem({
         name: itemName.trim(),
         qty: itemQty ? parseInt(itemQty) : undefined,
+        unit: itemUnit || undefined,
+        category: itemCategory || undefined,
       })
       setItemName('')
       setItemQty('1')
+      setItemUnit('un')
+      setItemCategory('')
       setShowAddItemModal(false)
       toast.success('Item adicionado!')
     } catch (error: any) {
@@ -478,6 +684,8 @@ function ListDetailPage() {
     setEditingItemId(item.id)
     setItemName(item.name)
     setItemQty(item.qty?.toString() || '1')
+    setItemUnit(item.unit || 'un')
+    setItemCategory(item.category || '')
     setShowEditItemModal(true)
   }
 
@@ -492,12 +700,16 @@ function ListDetailPage() {
         updates: {
           name: itemName.trim(),
           qty: itemQty ? parseInt(itemQty) : undefined,
+          unit: itemUnit || undefined,
+          category: itemCategory || undefined,
         },
       })
       setShowEditItemModal(false)
       setEditingItemId(null)
       setItemName('')
       setItemQty('1')
+      setItemUnit('un')
+      setItemCategory('')
       toast.success('Item atualizado!')
     } catch (error: any) {
       console.error('Erro ao atualizar item:', error)
@@ -650,7 +862,16 @@ function ListDetailPage() {
                   />
                   <ItemContent>
                     <ItemName checked={item.checked}>{item.name}</ItemName>
-                    {item.qty > 1 && <ItemQty>({item.qty})</ItemQty>}
+                    {(item.qty || item.unit) && (
+                      <QtyAndUnitContainer>
+                        {item.qty && <ItemQty>{item.qty}</ItemQty>}
+                        {item.unit && (
+                          <UnitBadge $isUn={item.unit === 'un'}>
+                            {item.unit}
+                          </UnitBadge>
+                        )}
+                      </QtyAndUnitContainer>
+                    )}
                   </ItemContent>
                   <ItemActions>
                     <ActionButton onClick={() => handleEditItem(item)} title="Editar">
@@ -683,6 +904,8 @@ function ListDetailPage() {
             setShowAddItemModal(false)
             setItemName('')
             setItemQty('1')
+            setItemUnit('un')
+            setItemCategory('')
           }}>✕</CloseButton>
         </ModalHeader>
         
@@ -720,11 +943,30 @@ function ListDetailPage() {
           />
         </FormGroup>
 
+        <FormGroup>
+          <Label>Unidade</Label>
+          <Select
+            value={itemUnit}
+            onChange={e => setItemUnit(e.target.value)}
+          >
+            <option value="un">Unidade (un)</option>
+            <option value="kg">Quilograma (kg)</option>
+            <option value="g">Grama (g)</option>
+            <option value="L">Litro (L)</option>
+            <option value="mL">Mililitro (mL)</option>
+            <option value="cx">Caixa (cx)</option>
+            <option value="pct">Pacote (pct)</option>
+            <option value="lata">Lata</option>
+          </Select>
+        </FormGroup>
+
         <ModalActions>
           <Button onClick={() => {
             setShowAddItemModal(false)
             setItemName('')
             setItemQty('1')
+            setItemUnit('un')
+            setItemCategory('')
           }}>
             Cancelar
           </Button>
@@ -748,6 +990,8 @@ function ListDetailPage() {
             setEditingItemId(null)
             setItemName('')
             setItemQty('1')
+            setItemUnit('un')
+            setItemCategory('')
           }}>✕</CloseButton>
         </ModalHeader>
         
@@ -771,12 +1015,31 @@ function ListDetailPage() {
           />
         </FormGroup>
 
+        <FormGroup>
+          <Label>Unidade</Label>
+          <Select
+            value={itemUnit}
+            onChange={e => setItemUnit(e.target.value)}
+          >
+            <option value="un">Unidade (un)</option>
+            <option value="kg">Quilograma (kg)</option>
+            <option value="g">Grama (g)</option>
+            <option value="L">Litro (L)</option>
+            <option value="mL">Mililitro (mL)</option>
+            <option value="cx">Caixa (cx)</option>
+            <option value="pct">Pacote (pct)</option>
+            <option value="lata">Lata</option>
+          </Select>
+        </FormGroup>
+
         <ModalActions>
           <Button onClick={() => {
             setShowEditItemModal(false)
             setEditingItemId(null)
             setItemName('')
             setItemQty('1')
+            setItemUnit('un')
+            setItemCategory('')
           }}>
             Cancelar
           </Button>

@@ -44,7 +44,7 @@ export function useItems(listId: string | undefined) {
   })
 
   const createMutation = useMutation({
-    mutationFn: (item: { name: string; qty?: number }) => {
+    mutationFn: (item: { name: string; qty?: number; unit?: string; category?: string }) => {
       if (!uid || !listId) {
         throw new Error('Usuário não autenticado ou lista não selecionada')
       }
@@ -61,7 +61,7 @@ export function useItems(listId: string | undefined) {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: { name?: string; qty?: number; checked?: boolean } }) => {
+    mutationFn: ({ id, updates }: { id: string; updates: { name?: string; qty?: number; checked?: boolean; unit?: string; category?: string } }) => {
       if (!uid || !listId) {
         throw new Error('Usuário não autenticado ou lista não selecionada')
       }
