@@ -1,183 +1,181 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../auth/context/AuthProvider'
 import { useLists } from '../hooks/useLists'
+import { useItemsPreview } from '../hooks/useItemsPreview'
 import styled from 'styled-components'
 import LoadingSpinner from '../../../shared/components/LoadingSpinner'
+import toast from 'react-hot-toast'
 
 const Container = styled.div`
   min-height: 100vh;
-  padding: var(--spacing-md);
-  max-width: 800px;
-  margin: 0 auto;
+  background: #f5f5f5;
+  padding-bottom: 100px;
 `
 
 const Header = styled.header`
+  background: white;
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+`
+
+const HeaderContent = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-xl);
-  padding: var(--spacing-md) 0;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
 `
 
 const Title = styled.h1`
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: #1a1a1a;
+  margin: 0;
 `
 
-const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  font-size: 0.9rem;
-  color: var(--color-text-light);
-`
-
-const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: ${props => {
-    if (props.$variant === 'primary') return 'var(--color-primary-gradient)'
-    if (props.$variant === 'danger') return 'var(--color-danger)'
-    return 'var(--color-bg-secondary)'
-  }};
-  color: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'white' : 'var(--color-text)')};
-  border: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'none' : '2px solid var(--color-border)')};
-  border-radius: var(--radius-lg);
-  font-size: 1rem;
+const AddButton = styled.button`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 48px;
-  box-shadow: ${props => props.$variant === 'primary' ? 'var(--shadow-md)' : 'none'};
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transition: all 0.2s;
+  min-height: 44px;
 
-  &:hover:not(:disabled) {
-    opacity: ${props => props.$variant === 'primary' || props.$variant === 'danger' ? '0.9' : '1'};
-    transform: translateY(-2px);
-    box-shadow: ${props => props.$variant === 'primary' ? 'var(--shadow-colored)' : 'var(--shadow-sm)'};
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
+  &:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 `
 
-const ListsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--spacing-md);
+const Content = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+`
 
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+const ListsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 `
 
 const ListCard = styled.div`
-  background: var(--color-bg);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: var(--color-primary-gradient);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-  }
-
-  &:hover {
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-colored);
-    transform: translateY(-4px);
-    
-    &::before {
-      transform: scaleX(1);
-    }
-  }
+  transition: all 0.2s;
+  border: 1px solid #f0f0f0;
 
   &:active {
-    transform: translateY(-2px);
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
   }
+`
+
+const ListHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
 `
 
 const ListTitle = styled.h3`
   font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text);
-`
-
-const ListMeta = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-  color: var(--color-text-light);
-  margin-top: var(--spacing-md);
+  color: #1a1a1a;
+  flex: 1;
+  margin: 0;
+  line-height: 1.4;
 `
 
 const ListActions = styled.div`
   display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
+  gap: 8px;
+  flex-shrink: 0;
 `
 
 const IconButton = styled.button`
-  background: none;
+  background: #f5f5f5;
   border: none;
-  font-size: 1rem;
+  font-size: 1.1rem;
   cursor: pointer;
-  color: var(--color-text-light);
-  padding: var(--spacing-xs);
-  transition: color 0.2s;
-  flex: 1;
+  color: #666;
+  padding: 8px;
+  min-width: 36px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-xs);
+  border-radius: 8px;
+  transition: all 0.2s;
 
-  &:hover {
-    color: var(--color-primary);
+  &:active {
+    background: #e0e0e0;
+    transform: scale(0.95);
   }
 
-  &.danger:hover {
-    color: var(--color-danger);
+  &.danger:active {
+    color: #e74c3c;
+    background: #fee;
   }
+`
+
+const ItemsPreview = styled.div`
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+`
+
+const PreviewItem = styled.div`
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 6px;
+  line-height: 1.5;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`
+
+const PreviewMore = styled.div`
+  font-size: 0.85rem;
+  color: #999;
+  font-style: italic;
+  margin-top: 6px;
 `
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: var(--spacing-2xl);
-  color: var(--color-text-light);
+  padding: 60px 20px;
+  color: #999;
 `
 
 const EmptyTitle = styled.h2`
-  font-size: 1.5rem;
-  margin-bottom: var(--spacing-md);
-  color: var(--color-text);
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  color: #666;
+  font-weight: 600;
 `
 
 const EmptyText = styled.p`
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 24px;
+  font-size: 0.95rem;
 `
 
 // Modal
@@ -190,6 +188,7 @@ const Overlay = styled.div<{ $show: boolean }>`
   background: rgba(0, 0, 0, 0.5);
   z-index: 999;
   display: ${props => (props.$show ? 'block' : 'none')};
+  backdrop-filter: blur(4px);
 `
 
 const BottomSheet = styled.div<{ $show: boolean }>`
@@ -197,21 +196,21 @@ const BottomSheet = styled.div<{ $show: boolean }>`
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--color-bg);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  padding: var(--spacing-xl);
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 24px;
   max-height: 85vh;
   overflow-y: auto;
   z-index: 1000;
   transform: ${props => (props.$show ? 'translateY(0)' : 'translateY(100%)')};
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
 
   @media (min-width: 768px) {
     max-width: 500px;
     left: 50%;
     transform: ${props => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)')};
-    border-radius: var(--radius-xl);
+    border-radius: 24px;
   }
 `
 
@@ -219,61 +218,100 @@ const ModalHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 24px;
 `
 
 const ModalTitle = styled.h2`
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: #1a1a1a;
 `
 
 const CloseButton = styled.button`
-  background: none;
+  background: #f5f5f5;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: var(--color-text-light);
-  padding: var(--spacing-xs);
-  line-height: 1;
+  color: #666;
+  padding: 8px;
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s;
+
+  &:active {
+    background: #e0e0e0;
+    transform: scale(0.95);
+  }
 `
 
 const FormGroup = styled.div`
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 20px;
 `
 
 const Label = styled.label`
   display: block;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 8px;
   font-weight: 600;
-  color: var(--color-text);
-  font-size: 0.9rem;
+  color: #1a1a1a;
+  font-size: 0.95rem;
 `
 
 const Input = styled.input`
   width: 100%;
-  padding: var(--spacing-md);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
   font-size: 1rem;
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: #fafafa;
+  color: #1a1a1a;
   min-height: 48px;
+  transition: all 0.2s;
 
   &:focus {
-    border-color: var(--color-primary);
+    border-color: #667eea;
     outline: none;
+    background: white;
   }
 `
 
 const ModalActions = styled.div`
   display: flex;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-xl);
+  gap: 12px;
+  margin-top: 32px;
+`
+
+const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
+  flex: 1;
+  padding: 14px;
+  background: ${props => {
+    if (props.$variant === 'primary') return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    if (props.$variant === 'danger') return '#e74c3c'
+    return '#f5f5f5'
+  }};
+  color: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'white' : '#1a1a1a')};
+  border: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'none' : '2px solid #e0e0e0')};
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `
 
 function ListsPage() {
-  const { user } = useAuth()
   const { lists, isLoading, createList, renameList, deleteList, isCreating, isDeleting } = useLists()
   const navigate = useNavigate()
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -289,15 +327,21 @@ function ListsPage() {
     }
 
     try {
-      await createList(listName.trim())
+      const newList = await createList(listName.trim())
       setListName('')
       setShowCreateModal(false)
+      toast.success('Lista criada!')
+      // Navegar para a lista criada
+      if (newList?.id) {
+        navigate(`/lists/${newList.id}`)
+      }
     } catch (error) {
       console.error('Erro ao criar lista:', error)
     }
   }
 
-  const handleEditList = (listId: string, currentName: string) => {
+  const handleEditList = (listId: string, currentName: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     setEditingListId(listId)
     setListName(currentName)
     setShowEditModal(true)
@@ -313,12 +357,19 @@ function ListsPage() {
       setShowEditModal(false)
       setEditingListId(null)
       setListName('')
+      toast.success('Lista renomeada!')
     } catch (error) {
       console.error('Erro ao renomear lista:', error)
     }
   }
 
-  const handleDeleteList = async () => {
+  const handleDeleteList = (listId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setDeletingListId(listId)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleConfirmDelete = async () => {
     if (!deletingListId) {
       return
     }
@@ -327,6 +378,7 @@ function ListsPage() {
       await deleteList(deletingListId)
       setShowDeleteConfirm(false)
       setDeletingListId(null)
+      toast.success('Lista deletada!')
     } catch (error) {
       console.error('Erro ao deletar lista:', error)
     }
@@ -340,67 +392,37 @@ function ListsPage() {
     <>
       <Container>
         <Header>
-          <Title>Minhas Listas</Title>
-          <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center', flexWrap: 'wrap' }}>
-            <UserInfo>
-              {user?.email}
-            </UserInfo>
-            <Button onClick={() => navigate('/settings')}>
-              Configurações
-            </Button>
-            <Button $variant="primary" onClick={() => setShowCreateModal(true)}>
-              + Nova Lista
-            </Button>
-          </div>
+          <HeaderContent>
+            <Title>Minhas Listas</Title>
+            <AddButton onClick={() => setShowCreateModal(true)} disabled={isCreating}>
+              {isCreating ? '...' : '+ Nova'}
+            </AddButton>
+          </HeaderContent>
         </Header>
 
-        {lists.length === 0 ? (
-          <EmptyState>
-            <EmptyTitle>Nenhuma lista ainda</EmptyTitle>
-            <EmptyText>Crie sua primeira lista para começar!</EmptyText>
-            <Button $variant="primary" onClick={() => setShowCreateModal(true)}>
-              Criar primeira lista
-            </Button>
-          </EmptyState>
-        ) : (
-          <ListsGrid>
-            {lists.map(list => (
-              <ListCard key={list.id} onClick={() => navigate(`/lists/${list.id}`)}>
-                <ListTitle>{list.name}</ListTitle>
-                <ListMeta>
-                  <span>
-                    {new Date(list.updatedAt).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    })}
-                  </span>
-                  {list.itemCount !== undefined && (
-                    <span>{list.itemCount} {list.itemCount === 1 ? 'item' : 'itens'}</span>
-                  )}
-                </ListMeta>
-                <ListActions onClick={(e) => e.stopPropagation()}>
-                  <IconButton
-                    onClick={() => handleEditList(list.id, list.name)}
-                    title="Editar"
-                  >
-                    ✏️ Editar
-                  </IconButton>
-                  <IconButton
-                    className="danger"
-                    onClick={() => {
-                      setDeletingListId(list.id)
-                      setShowDeleteConfirm(true)
-                    }}
-                    title="Deletar"
-                  >
-                    🗑️ Deletar
-                  </IconButton>
-                </ListActions>
-              </ListCard>
-            ))}
-          </ListsGrid>
-        )}
+        <Content>
+          {lists.length === 0 ? (
+            <EmptyState>
+              <EmptyTitle>Nenhuma lista ainda</EmptyTitle>
+              <EmptyText>Crie sua primeira lista para começar!</EmptyText>
+              <AddButton onClick={() => setShowCreateModal(true)} disabled={isCreating}>
+                {isCreating ? 'Criando...' : '+ Criar primeira lista'}
+              </AddButton>
+            </EmptyState>
+          ) : (
+            <ListsContainer>
+              {lists.map(list => (
+                <ListCardWithPreview 
+                  key={list.id} 
+                  list={list} 
+                  onEdit={handleEditList} 
+                  onDelete={handleDeleteList} 
+                  onNavigate={() => navigate(`/lists/${list.id}`)} 
+                />
+              ))}
+            </ListsContainer>
+          )}
+        </Content>
       </Container>
 
       {/* Modal Criar Lista */}
@@ -506,7 +528,7 @@ function ListsPage() {
           }}>✕</CloseButton>
         </ModalHeader>
         
-        <p style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--color-text)' }}>
+        <p style={{ marginBottom: '24px', color: '#666', lineHeight: '1.6' }}>
           Tem certeza que deseja deletar esta lista? Todos os itens serão removidos permanentemente.
         </p>
 
@@ -519,7 +541,7 @@ function ListsPage() {
           </Button>
           <Button 
             $variant="danger" 
-            onClick={handleDeleteList} 
+            onClick={handleConfirmDelete} 
             disabled={isDeleting}
           >
             {isDeleting ? 'Deletando...' : 'Deletar'}
@@ -527,6 +549,59 @@ function ListsPage() {
         </ModalActions>
       </BottomSheet>
     </>
+  )
+}
+
+// Componente para card com preview de itens
+function ListCardWithPreview({ 
+  list, 
+  onEdit, 
+  onDelete, 
+  onNavigate 
+}: { 
+  list: { id: string; name: string; updatedAt: Date }
+  onEdit: (listId: string, name: string, e: React.MouseEvent) => void
+  onDelete: (listId: string, e: React.MouseEvent) => void
+  onNavigate: () => void
+}) {
+  const { items, total, isLoading } = useItemsPreview(list.id)
+  const previewItems = items.slice(0, 3) // Mostrar até 3 itens no preview
+  const remaining = total - previewItems.length
+
+  return (
+    <ListCard onClick={onNavigate}>
+      <ListHeader>
+        <ListTitle>{list.name}</ListTitle>
+        <ListActions onClick={(e) => e.stopPropagation()}>
+          <IconButton
+            onClick={(e) => onEdit(list.id, list.name, e)}
+            title="Editar"
+          >
+            ✏️
+          </IconButton>
+          <IconButton
+            className="danger"
+            onClick={(e) => onDelete(list.id, e)}
+            title="Deletar"
+          >
+            🗑️
+          </IconButton>
+        </ListActions>
+      </ListHeader>
+      
+      {!isLoading && total > 0 && (
+        <ItemsPreview>
+          {previewItems.map(item => (
+            <PreviewItem key={item.id}>
+              • {item.name} {item.qty > 1 ? `(${item.qty})` : ''}
+            </PreviewItem>
+          ))}
+          {remaining > 0 && (
+            <PreviewMore>+{remaining} {remaining === 1 ? 'item' : 'itens'}…</PreviewMore>
+          )}
+        </ItemsPreview>
+      )}
+    </ListCard>
   )
 }
 

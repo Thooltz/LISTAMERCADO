@@ -20,9 +20,7 @@ export interface Item {
   id: string
   name: string
   checked: boolean
-  qty?: number
-  unit?: string
-  category?: string
+  qty: number
   createdAt: Date
   updatedAt: Date
 }
@@ -36,9 +34,7 @@ function docToItem(docSnap: QueryDocumentSnapshot<DocumentData>): Item {
     id: docSnap.id,
     name: data.name || '',
     checked: data.checked || false,
-    qty: data.qty || undefined,
-    unit: data.unit || undefined,
-    category: data.category || undefined,
+    qty: data.qty || 1,
     createdAt: data.createdAt?.toDate() || new Date(),
     updatedAt: data.updatedAt?.toDate() || new Date(),
   }
@@ -108,6 +104,37 @@ export async function getItems(uid: string, listId: string): Promise<Item[]> {
 }
 
 /**
+ * Obtém preview de itens (máximo 3) para exibir no card da lista
+ */
+export async function getItemsPreview(uid: string, listId: string, limit: number = 3): Promise<{ items: Item[]; total: number }> {
+  try {
+    if (!uid || !listId) {
+      throw new Error('UID e listId são obrigatórios')
+    }
+
+    const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+    const q = query(itemsRef, orderBy('checked', 'asc'), orderBy('createdAt', 'desc'))
+    const querySnapshot = await getDocs(q)
+
+    const allItems = querySnapshot.docs.map(docToItem)
+    const sortedItems = allItems.sort((a, b) => {
+      if (a.checked === b.checked) {
+        return b.createdAt.getTime() - a.createdAt.getTime()
+      }
+      return a.checked ? 1 : -1
+    })
+
+    return {
+      items: sortedItems.slice(0, limit),
+      total: sortedItems.length,
+    }
+  } catch (error: any) {
+    console.error('Erro ao buscar preview de itens:', error)
+    return { items: [], total: 0 }
+  }
+}
+
+/**
  * Adiciona um novo item à lista
  */
 export async function addItem(
@@ -116,8 +143,6 @@ export async function addItem(
   item: {
     name: string
     qty?: number
-    unit?: string
-    category?: string
   }
 ): Promise<Item> {
   try {
@@ -129,12 +154,12 @@ export async function addItem(
     }
 
     const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+    const qty = item.qty && item.qty > 0 ? item.qty : 1
+    
     const docRef = await addDoc(itemsRef, {
       name: item.name.trim(),
       checked: false,
-      qty: item.qty || undefined,
-      unit: item.unit || undefined,
-      category: item.category || undefined,
+      qty: qty,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -148,9 +173,7 @@ export async function addItem(
       id: docRef.id,
       name: item.name.trim(),
       checked: false,
-      qty: item.qty,
-      unit: item.unit,
-      category: item.category,
+      qty: qty,
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -170,8 +193,6 @@ export async function updateItem(
   updates: {
     name?: string
     qty?: number
-    unit?: string
-    category?: string
     checked?: boolean
   }
 ): Promise<void> {
@@ -186,9 +207,7 @@ export async function updateItem(
     }
 
     if (updates.name !== undefined) updateData.name = updates.name.trim()
-    if (updates.qty !== undefined) updateData.qty = updates.qty
-    if (updates.unit !== undefined) updateData.unit = updates.unit
-    if (updates.category !== undefined) updateData.category = updates.category
+    if (updates.qty !== undefined) updateData.qty = updates.qty > 0 ? updates.qty : 1
     if (updates.checked !== undefined) updateData.checked = updates.checked
 
     await updateDoc(itemRef, updateData)

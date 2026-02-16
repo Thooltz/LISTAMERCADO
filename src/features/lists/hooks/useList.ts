@@ -1,37 +1,40 @@
 import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../auth/context/AuthProvider'
-import { getLists, List } from '../../../services/listService'
+import { subscribeToList, List } from '../../../services/listService'
 
 export function useList(listId: string | undefined) {
   const { user } = useAuth()
   const uid = user?.uid
   const [list, setList] = useState<List | null>(null)
-
-  const {
-    data: lists,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['lists', uid],
-    queryFn: () => {
-      if (!uid) {
-        throw new Error('Usuário não autenticado')
-      }
-      return getLists(uid)
-    },
-    enabled: !!uid && !!listId,
-    staleTime: 1000 * 30,
-  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
-    if (lists && listId) {
-      const foundList = lists.find((l) => l.id === listId)
-      setList(foundList || null)
-    } else {
+    if (!uid || !listId) {
       setList(null)
+      setIsLoading(false)
+      return
     }
-  }, [lists, listId])
+
+    setIsLoading(true)
+    setError(null)
+
+    const unsubscribe = subscribeToList(
+      uid,
+      listId,
+      (fetchedList) => {
+        setList(fetchedList)
+        setIsLoading(false)
+      },
+      (err) => {
+        console.error('Erro ao buscar lista:', err)
+        setError(err)
+        setIsLoading(false)
+      }
+    )
+
+    return () => unsubscribe()
+  }, [uid, listId])
 
   return { 
     list, 

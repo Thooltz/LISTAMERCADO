@@ -102,7 +102,7 @@ export function useLists() {
     isLoading,
     error,
     refetch,
-    createList: createMutation.mutateAsync,
+    createList: createMutation.mutateAsync, // Retorna Promise<List>
     renameList: renameMutation.mutateAsync,
     deleteList: deleteMutation.mutateAsync,
     isCreating: createMutation.isPending,

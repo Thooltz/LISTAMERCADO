@@ -3,6 +3,7 @@ import {
   query,
   orderBy,
   getDocs,
+  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -63,6 +64,62 @@ export function subscribeLists(
       callback([])
     }
   )
+}
+
+/**
+ * Obtém uma lista específica (realtime)
+ */
+export function subscribeToList(
+  uid: string,
+  listId: string,
+  callback: (list: List | null) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  if (!uid || !listId) {
+    throw new Error('UID e listId são obrigatórios')
+  }
+
+  const listRef = doc(db, 'users', uid, 'lists', listId)
+
+  return onSnapshot(
+    listRef,
+    (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docToList(docSnap as QueryDocumentSnapshot<DocumentData>))
+      } else {
+        callback(null)
+      }
+    },
+    (error) => {
+      console.error('Erro ao buscar lista:', error)
+      if (onError) {
+        onError(error as Error)
+      }
+      callback(null)
+    }
+  )
+}
+
+/**
+ * Obtém uma lista específica (one-time)
+ */
+export async function getList(uid: string, listId: string): Promise<List | null> {
+  try {
+    if (!uid || !listId) {
+      throw new Error('UID e listId são obrigatórios')
+    }
+
+    const listRef = doc(db, 'users', uid, 'lists', listId)
+    const docSnap = await getDoc(listRef)
+
+    if (docSnap.exists()) {
+      return docToList(docSnap as QueryDocumentSnapshot<DocumentData>)
+    }
+    return null
+  } catch (error: any) {
+    console.error('Erro ao buscar lista:', error)
+    throw new Error(error.message || 'Erro ao buscar lista')
+  }
 }
 
 /**
