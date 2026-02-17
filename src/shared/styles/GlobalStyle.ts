@@ -75,10 +75,46 @@ export const GlobalStyle = createGlobalStyle`
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
     background: var(--color-bg-gradient);
     color: var(--color-text);
     transition: background-color var(--transition-base), color var(--transition-base);
     overflow-x: hidden;
+    /* Safe area para notches */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Otimizações para mobile */
+  @media (max-width: 768px) {
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* Melhorar scroll em mobile */
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Prevenir zoom em inputs no iOS */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 
   @keyframes fadeIn {
