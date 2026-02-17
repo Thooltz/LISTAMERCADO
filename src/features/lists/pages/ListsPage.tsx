@@ -51,11 +51,17 @@ const Header = styled.header`
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   padding: 24px 20px;
+  padding-top: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+
+  @media (max-width: 480px) {
+    padding: 20px 16px;
+    padding-top: 20px;
+  }
 `
 
 const HeaderContent = styled.div`
@@ -97,6 +103,14 @@ const AddButton = styled.button`
   letter-spacing: 0.5px;
   position: relative;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+
+  @media (max-width: 480px) {
+    padding: 16px 20px;
+    font-size: 1.05rem;
+    min-height: 56px;
+    border-radius: 14px;
+  }
 
   &::before {
     content: '';
@@ -157,8 +171,14 @@ const Content = styled.div`
   max-width: 600px;
   margin: 0 auto;
   padding: 24px 20px;
+  padding-bottom: 24px;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 480px) {
+    padding: 20px 16px;
+    padding-bottom: 20px;
+  }
 `
 
 const ListsContainer = styled.div`
@@ -356,21 +376,34 @@ const BottomSheet = styled.div<{ $show: boolean }>`
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
   border-radius: 24px 24px 0 0;
   padding: 24px;
-  max-height: 85vh;
+  padding-bottom: 24px;
+  max-height: 90vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   z-index: 1000;
   transform: ${props => (props.$show ? 'translateY(0)' : 'translateY(100%)')};
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+
+  @media (max-width: 480px) {
+    padding: 20px;
+    padding-bottom: 20px;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+  }
 
   @media (min-width: 768px) {
     max-width: 500px;
     left: 50%;
     transform: ${props => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)')};
     border-radius: 24px;
+    padding-bottom: 24px;
   }
 `
 

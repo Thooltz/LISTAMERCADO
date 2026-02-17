@@ -57,9 +57,15 @@ const StickyHeader = styled.header`
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   z-index: 100;
   padding: 20px 16px;
+  padding-top: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   transition: all var(--transition-base);
+
+  @media (max-width: 480px) {
+    padding: 16px 12px;
+    padding-top: 16px;
+  }
 `
 
 const HeaderContent = styled.div`
@@ -106,6 +112,11 @@ const Title = styled.h1`
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
+  @media (max-width: 480px) {
+    font-size: 1.3rem;
+    line-height: 1.3;
+  }
 `
 
 const HeaderActions = styled.div`
@@ -148,8 +159,14 @@ const Content = styled.div`
   max-width: 600px;
   margin: 0 auto;
   padding: 16px;
+  padding-bottom: 16px;
   position: relative;
   z-index: 1;
+
+  @media (max-width: 480px) {
+    padding: 12px;
+    padding-bottom: 12px;
+  }
 `
 
 const AddButton = styled.button`
@@ -169,6 +186,7 @@ const AddButton = styled.button`
   letter-spacing: 0.5px;
   position: relative;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
 
   &::before {
     content: '';
@@ -198,6 +216,14 @@ const AddButton = styled.button`
     cursor: not-allowed;
     transform: none;
   }
+
+  @media (max-width: 480px) {
+    padding: 20px;
+    font-size: 1.1rem;
+    min-height: 60px;
+    border-radius: 18px;
+    margin-bottom: 16px;
+  }
 `
 
 const StatsBar = styled.div`
@@ -212,6 +238,12 @@ const StatsBar = styled.div`
   box-shadow: var(--shadow-glass);
   border: 1px solid rgba(255, 255, 255, 0.3);
   animation: fadeIn 0.5s ease-out;
+
+  @media (max-width: 480px) {
+    padding: 20px 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
 `
 
 const StatItem = styled.div`
@@ -226,17 +258,29 @@ const StatValue = styled.div`
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 6px;
+
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+  }
 `
 
 const StatLabel = styled.div`
   font-size: 0.85rem;
   color: #999;
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 `
 
 const ItemsList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
+
+  @media (max-width: 480px) {
+    gap: 12px;
+  }
 `
 
 const ItemCard = styled.div<{ checked: boolean }>`
@@ -256,6 +300,14 @@ const ItemCard = styled.div<{ checked: boolean }>`
   position: relative;
   overflow: hidden;
   animation: slideUp 0.4s ease-out;
+  -webkit-tap-highlight-color: transparent;
+
+  @media (max-width: 480px) {
+    padding: 18px 16px;
+    gap: 12px;
+    min-height: 72px;
+    border-radius: 18px;
+  }
 
   &::before {
     content: '';
@@ -298,12 +350,24 @@ const ItemCard = styled.div<{ checked: boolean }>`
 `
 
 const Checkbox = styled.input`
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
   flex-shrink: 0;
   accent-color: #667eea;
-  border-radius: 6px;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--transition-base);
+
+  &:active {
+    transform: scale(0.9);
+  }
+
+  @media (max-width: 480px) {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+  }
 `
 
 const ItemContent = styled.div`
@@ -324,12 +388,22 @@ const ItemName = styled.span<{ checked: boolean }>`
   word-break: break-word;
   letter-spacing: -0.2px;
   line-height: 1.5;
+
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
 `
 
 const ItemQty = styled.span`
   font-size: 0.9rem;
   color: #999;
   white-space: nowrap;
+  font-weight: 600;
+
+  @media (max-width: 480px) {
+    font-size: 1rem;
+  }
 `
 
 const UnitBadge = styled.div<{ $isUn?: boolean }>`
@@ -351,11 +425,13 @@ const UnitBadge = styled.div<{ $isUn?: boolean }>`
   min-width: ${props => props.$isUn ? '48px' : '40px'};
   letter-spacing: 0.3px;
   transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
   
   @media (max-width: 480px) {
     padding: ${props => props.$isUn ? '10px 16px' : '8px 14px'};
     font-size: ${props => props.$isUn ? '1rem' : '0.9rem'};
     min-width: ${props => props.$isUn ? '52px' : '44px'};
+    border-radius: ${props => props.$isUn ? '14px' : '12px'};
   }
 `
 
@@ -460,19 +536,29 @@ const BottomSheet = styled.div<{ $show: boolean }>`
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border-radius: 28px 28px 0 0;
   padding: 28px;
-  max-height: 85vh;
+  padding-bottom: 28px;
+  max-height: 90vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   z-index: 1000;
   transform: ${props => (props.$show ? 'translateY(0)' : 'translateY(100%)')};
   transition: transform var(--transition-slow);
   box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
   border-top: 1px solid rgba(255, 255, 255, 0.3);
 
+  @media (max-width: 480px) {
+    padding: 24px 20px;
+    padding-bottom: 24px;
+    border-radius: 24px 24px 0 0;
+    max-height: 92vh;
+  }
+
   @media (min-width: 768px) {
     max-width: 520px;
     left: 50%;
     transform: ${props => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)')};
     border-radius: 28px;
+    padding-bottom: 28px;
   }
 `
 
@@ -530,13 +616,15 @@ const Input = styled.input`
   padding: 16px;
   border: 2px solid rgba(224, 224, 224, 0.5);
   border-radius: 16px;
-  font-size: 1rem;
+  font-size: 16px;
   background: rgba(250, 250, 250, 0.8);
   backdrop-filter: blur(10px);
   color: #1a1a1a;
   min-height: 52px;
   transition: all var(--transition-base);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
 
   &:focus {
     border-color: #667eea;
@@ -545,6 +633,13 @@ const Input = styled.input`
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
     transform: translateY(-1px);
   }
+
+  @media (max-width: 480px) {
+    padding: 18px;
+    min-height: 56px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
 `
 
 const Select = styled.select`
@@ -552,7 +647,7 @@ const Select = styled.select`
   padding: 16px;
   border: 2px solid rgba(224, 224, 224, 0.5);
   border-radius: 16px;
-  font-size: 1rem;
+  font-size: 16px;
   background: rgba(250, 250, 250, 0.8);
   backdrop-filter: blur(10px);
   color: #1a1a1a;
@@ -560,6 +655,8 @@ const Select = styled.select`
   transition: all var(--transition-base);
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
 
   &:focus {
     border-color: #667eea;
@@ -567,6 +664,13 @@ const Select = styled.select`
     background: rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
     transform: translateY(-1px);
+  }
+
+  @media (max-width: 480px) {
+    padding: 18px;
+    min-height: 56px;
+    font-size: 16px;
+    border-radius: 14px;
   }
 `
 
@@ -598,6 +702,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
     if (props.$variant === 'danger') return '0 4px 12px rgba(239, 68, 68, 0.3)'
     return '0 2px 8px rgba(0, 0, 0, 0.05)'
   }};
+  -webkit-tap-highlight-color: transparent;
 
   &:active:not(:disabled) {
     transform: scale(0.96);
@@ -611,6 +716,13 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 18px;
+    min-height: 56px;
+    font-size: 1.05rem;
+    border-radius: 14px;
   }
 `
 

@@ -6,13 +6,24 @@ import styled from 'styled-components'
 
 const Container = styled.div`
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  padding-top: 20px;
+  padding-bottom: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 480px) {
+    padding: 16px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    align-items: flex-start;
+    padding-top: 40px;
+  }
 
   &::before {
     content: '';
@@ -57,8 +68,10 @@ const Card = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.3);
 
   @media (max-width: 480px) {
-    padding: 36px 24px;
-    border-radius: 28px;
+    padding: 32px 20px;
+    border-radius: 24px;
+    max-width: 100%;
+    margin: 0;
   }
 `
 
@@ -142,12 +155,15 @@ const Input = styled.input`
   padding: 18px;
   border: 2px solid rgba(224, 224, 224, 0.5);
   border-radius: 16px;
-  font-size: 1rem;
+  font-size: 16px;
   transition: all var(--transition-base);
   background: rgba(250, 250, 250, 0.8);
   backdrop-filter: blur(10px);
   color: #1a1a1a;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 56px;
 
   &:focus {
     border-color: #667eea;
@@ -159,6 +175,12 @@ const Input = styled.input`
 
   &::placeholder {
     color: #999;
+  }
+
+  @media (max-width: 480px) {
+    padding: 20px;
+    min-height: 60px;
+    border-radius: 14px;
   }
 `
 
@@ -179,6 +201,14 @@ const Button = styled.button<{ $loading?: boolean }>`
   letter-spacing: 0.3px;
   position: relative;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+
+  @media (max-width: 480px) {
+    padding: 20px;
+    font-size: 1.1rem;
+    min-height: 60px;
+    border-radius: 14px;
+  }
 
   &::before {
     content: '';

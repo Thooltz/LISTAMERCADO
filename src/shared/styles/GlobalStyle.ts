@@ -80,11 +80,16 @@ export const GlobalStyle = createGlobalStyle`
     color: var(--color-text);
     transition: background-color var(--transition-base), color var(--transition-base);
     overflow-x: hidden;
-    /* Safe area para notches */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Safe area support para notches */
+  @supports (padding: max(0px)) {
+    body {
+      padding-top: max(0px, env(safe-area-inset-top));
+      padding-bottom: max(0px, env(safe-area-inset-bottom));
+      padding-left: max(0px, env(safe-area-inset-left));
+      padding-right: max(0px, env(safe-area-inset-right));
+    }
   }
 
   /* Otimizações para mobile */

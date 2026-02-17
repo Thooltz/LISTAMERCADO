@@ -35,11 +35,24 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <App />
           <Toaster
             position="top-center"
+            containerStyle={{
+              top: '0',
+            }}
             toastOptions={{
               duration: 3000,
               style: {
-                background: '#363636',
+                background: 'rgba(26, 26, 26, 0.95)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
                 color: '#fff',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                fontSize: '15px',
+                fontWeight: '600',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                maxWidth: '90vw',
+                margin: '0 auto',
               },
               success: {
                 duration: 2000,
@@ -47,12 +60,22 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   primary: '#10b981',
                   secondary: '#fff',
                 },
+                style: {
+                  background: 'rgba(16, 185, 129, 0.95)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                },
               },
               error: {
                 duration: 4000,
                 iconTheme: {
                   primary: '#ef4444',
                   secondary: '#fff',
+                },
+                style: {
+                  background: 'rgba(239, 68, 68, 0.95)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
                 },
               },
             }}
