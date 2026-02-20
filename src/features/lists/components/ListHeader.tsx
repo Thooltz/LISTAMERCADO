@@ -46,6 +46,13 @@ const BackButton = styled.button`
   z-index: 10002;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  
+  @media (max-width: 480px) {
+    min-width: 48px;
+    min-height: 48px;
+  }
   
   &:active {
     transform: scale(0.95);
@@ -97,6 +104,13 @@ const IconButton = styled.button`
   z-index: 10003;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  
+  @media (max-width: 480px) {
+    min-width: 48px;
+    min-height: 48px;
+  }
   
   &:active {
     transform: scale(0.95);
@@ -231,12 +245,17 @@ export default function ListHeader({ listId, name, onBack }: ListHeaderProps) {
               navigate('/lists')
             }
           }}
-          onMouseDown={e => {
+          onPointerDown={e => {
             e.stopPropagation()
           }}
           onTouchStart={e => {
             e.stopPropagation()
           }}
+          onTouchEnd={e => {
+            e.preventDefault()
+            e.stopPropagation()
+          }}
+          aria-label="Voltar para listas"
         >
           ←
         </BackButton>
@@ -263,9 +282,14 @@ export default function ListHeader({ listId, name, onBack }: ListHeaderProps) {
                   e.stopPropagation()
                   saveListName(e, listId, draftName)
                 }}
-                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
                 onTouchStart={e => e.stopPropagation()}
+                onTouchEnd={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
                 disabled={loading}
+                aria-label="Salvar nome da lista"
               >
                 ✅
               </IconButton>
@@ -277,9 +301,14 @@ export default function ListHeader({ listId, name, onBack }: ListHeaderProps) {
                   e.stopPropagation()
                   cancelEditListName(e)
                 }}
-                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
                 onTouchStart={e => e.stopPropagation()}
+                onTouchEnd={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
                 disabled={loading}
+                aria-label="Cancelar edição"
               >
                 ✕
               </IconButton>
@@ -294,9 +323,14 @@ export default function ListHeader({ listId, name, onBack }: ListHeaderProps) {
                   e.stopPropagation()
                   startEditListName(e)
                 }}
-                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
                 onTouchStart={e => e.stopPropagation()}
+                onTouchEnd={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
                 disabled={loading}
+                aria-label="Editar nome da lista"
               >
                 ✏️
               </IconButton>
@@ -308,9 +342,14 @@ export default function ListHeader({ listId, name, onBack }: ListHeaderProps) {
                   e.stopPropagation()
                   deleteListById(e, listId)
                 }}
-                onMouseDown={e => e.stopPropagation()}
+                onPointerDown={e => e.stopPropagation()}
                 onTouchStart={e => e.stopPropagation()}
+                onTouchEnd={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
                 disabled={loading}
+                aria-label="Excluir lista"
               >
                 🗑️
               </IconButton>

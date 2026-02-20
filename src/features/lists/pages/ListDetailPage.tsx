@@ -196,6 +196,7 @@ const ItemCard = styled.div<{ checked: boolean }>`
   animation: slideUp 0.4s ease-out;
   -webkit-tap-highlight-color: transparent;
   pointer-events: auto;
+  touch-action: manipulation;
 
   @media (max-width: 480px) {
     padding: 18px 16px;
@@ -255,15 +256,23 @@ const Checkbox = styled.input`
   border-radius: 8px;
   -webkit-tap-highlight-color: transparent;
   transition: transform var(--transition-base);
+  touch-action: manipulation;
+  pointer-events: auto;
+  position: relative;
+  z-index: 100;
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
 
   &:active {
     transform: scale(0.9);
   }
 
   @media (max-width: 480px) {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 10px;
+    min-width: 32px;
+    min-height: 32px;
   }
 `
 
@@ -273,6 +282,9 @@ const ItemContent = styled.div`
   align-items: center;
   gap: 8px;
   min-width: 0;
+  pointer-events: auto;
+  position: relative;
+  z-index: 50;
 `
 
 const ItemName = styled.span<{ checked: boolean }>`
@@ -347,6 +359,14 @@ const ItemActions = styled.div`
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  pointer-events: auto;
+  position: relative;
+  z-index: 150;
+  touch-action: manipulation;
+
+  @media (max-width: 480px) {
+    gap: 10px;
+  }
 `
 
 const ActionButton = styled.button`
@@ -357,8 +377,8 @@ const ActionButton = styled.button`
   cursor: pointer;
   color: #666;
   padding: 8px;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -367,7 +387,17 @@ const ActionButton = styled.button`
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   pointer-events: auto;
   position: relative;
-  z-index: 10;
+  z-index: 200;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+
+  @media (max-width: 480px) {
+    min-width: 48px;
+    min-height: 48px;
+    padding: 10px;
+  }
 
   &:active {
     background: rgba(233, 236, 239, 0.9);
@@ -380,6 +410,12 @@ const ActionButton = styled.button`
     background: rgba(254, 238, 238, 0.9);
     transform: scale(0.9) rotate(-5deg);
     box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 `
 
@@ -920,7 +956,18 @@ function ListDetailPage() {
                   <Checkbox
                     type="checkbox"
                     checked={item.checked}
-                    onChange={() => toggleItem(item.id)}
+                    onChange={(e) => {
+                      e.stopPropagation()
+                      console.log('✅ Checkbox CLICADO (mobile)', item.id, !item.checked)
+                      toggleItem(item.id)
+                    }}
+                    onPointerDown={(e) => {
+                      e.stopPropagation()
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation()
+                    }}
+                    aria-label={item.checked ? `Desmarcar ${item.name}` : `Marcar ${item.name} como concluído`}
                   />
                   <ItemContent>
                     <ItemName
@@ -948,7 +995,18 @@ function ListDetailPage() {
                         e.stopPropagation()
                         console.log('✅ Editar Item CLICADO', item.id)
                         handleEditItem(item)
-                      }} 
+                      }}
+                      onPointerDown={(e) => {
+                        e.stopPropagation()
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation()
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
+                      aria-label={`Editar item ${item.name}`}
                       title="Editar"
                     >
                       ✏️
@@ -963,6 +1021,17 @@ function ListDetailPage() {
                         setEditingItemId(item.id)
                         setShowDeleteItemConfirm(true)
                       }}
+                      onPointerDown={(e) => {
+                        e.stopPropagation()
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation()
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
+                      aria-label={`Remover item ${item.name}`}
                       title="Remover"
                     >
                       🗑️
