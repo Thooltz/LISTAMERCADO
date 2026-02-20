@@ -131,7 +131,7 @@ export function useItems(listId: string | undefined) {
     error,
     addItem: createMutation.mutateAsync,
     updateItem: updateMutation.mutateAsync,
-    toggleCheck: toggleCheckMutation.mutate,
+    toggleCheck: toggleCheckMutation.mutateAsync,
     deleteItem: deleteMutation.mutateAsync,
     isAdding: createMutation.isPending,
     isUpdating: updateMutation.isPending,

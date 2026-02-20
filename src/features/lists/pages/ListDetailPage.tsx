@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useList } from '../hooks/useList'
 import { useItems } from '../../items/hooks/useItems'
-import { useLists } from '../hooks/useLists'
 import styled from 'styled-components'
 import LoadingSpinner from '../../../shared/components/LoadingSpinner'
 import toast from 'react-hot-toast'
 import { getSuggestion, getDefaultUnit } from '../../../shared/utils/suggestions'
+import ListHeader from '../components/ListHeader'
 
 const Container = styled.div`
   min-height: 100vh;
@@ -46,112 +46,6 @@ const Container = styled.div`
   @keyframes float {
     0%, 100% { transform: translate(0, 0) scale(1); }
     50% { transform: translate(30px, -30px) scale(1.1); }
-  }
-`
-
-const StickyHeader = styled.header`
-  position: sticky;
-  top: 0;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  z-index: 100;
-  padding: 20px 16px;
-  padding-top: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-  transition: all var(--transition-base);
-
-  @media (max-width: 480px) {
-    padding: 16px 12px;
-    padding-top: 16px;
-  }
-`
-
-const HeaderContent = styled.div`
-  max-width: 600px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`
-
-const BackButton = styled.button`
-  background: rgba(245, 245, 245, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  font-size: 1.3rem;
-  cursor: pointer;
-  color: #1a1a1a;
-  padding: 8px;
-  min-width: 44px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  transition: all var(--transition-base);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-  &:active {
-    background: rgba(233, 236, 239, 0.9);
-    transform: scale(0.92) rotate(-5deg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-`
-
-const Title = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #1a1a1a;
-  flex: 1;
-  margin: 0;
-  line-height: 1.4;
-  letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-
-  @media (max-width: 480px) {
-    font-size: 1.3rem;
-    line-height: 1.3;
-  }
-`
-
-const HeaderActions = styled.div`
-  display: flex;
-  gap: 8px;
-`
-
-const IconButton = styled.button`
-  background: rgba(248, 249, 250, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  font-size: 1.1rem;
-  cursor: pointer;
-  color: #666;
-  padding: 8px;
-  min-width: 44px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  transition: all var(--transition-base);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-  &:active {
-    background: rgba(233, 236, 239, 0.9);
-    transform: scale(0.9) rotate(5deg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  &.danger:active {
-    color: #e74c3c;
-    background: rgba(254, 238, 238, 0.9);
-    transform: scale(0.9) rotate(-5deg);
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
   }
 `
 
@@ -298,9 +192,10 @@ const ItemCard = styled.div<{ checked: boolean }>`
   opacity: ${props => (props.checked ? 0.65 : 1)};
   min-height: 76px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   animation: slideUp 0.4s ease-out;
   -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
 
   @media (max-width: 480px) {
     padding: 18px 16px;
@@ -321,6 +216,7 @@ const ItemCard = styled.div<{ checked: boolean }>`
     transform-origin: top;
     transition: transform var(--transition-base);
     border-radius: 0 4px 4px 0;
+    pointer-events: none;
   }
 
   &::after {
@@ -333,6 +229,7 @@ const ItemCard = styled.div<{ checked: boolean }>`
     background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
     opacity: 0;
     transition: opacity var(--transition-base);
+    pointer-events: none;
   }
 
   &:active {
@@ -468,6 +365,9 @@ const ActionButton = styled.button`
   border-radius: 10px;
   transition: all var(--transition-base);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+  position: relative;
+  z-index: 10;
 
   &:active {
     background: rgba(233, 236, 239, 0.9);
@@ -591,6 +491,9 @@ const CloseButton = styled.button`
   border-radius: 12px;
   transition: all var(--transition-base);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+  position: relative;
+  z-index: 1001;
 
   &:active {
     background: rgba(233, 236, 239, 0.9);
@@ -730,13 +633,11 @@ function ListDetailPage() {
   const { listId } = useParams<{ listId: string }>()
   const navigate = useNavigate()
   const { list, isLoading: listLoading, isNotFound } = useList(listId)
-  const { items, isLoading: itemsLoading, addItem, updateItem, toggleCheck, deleteItem, isAdding, totalItems, checkedItems, uncheckedItems } = useItems(listId)
-  const { renameList, deleteList, isRenaming, isDeleting } = useLists()
+  const { items: fetchedItems, isLoading: itemsLoading, addItem, updateItem, toggleCheck, deleteItem, isAdding } = useItems(listId)
+  const [items, setItems] = useState(fetchedItems)
 
   const [showAddItemModal, setShowAddItemModal] = useState(false)
   const [showEditItemModal, setShowEditItemModal] = useState(false)
-  const [showEditListModal, setShowEditListModal] = useState(false)
-  const [showDeleteListConfirm, setShowDeleteListConfirm] = useState(false)
   const [showDeleteItemConfirm, setShowDeleteItemConfirm] = useState(false)
   
   const [itemName, setItemName] = useState('')
@@ -744,7 +645,6 @@ function ListDetailPage() {
   const [itemUnit, setItemUnit] = useState('un')
   const [itemCategory, setItemCategory] = useState('')
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
-  const [listName, setListName] = useState('')
 
   // Sugestões automáticas quando o nome do item muda
   useEffect(() => {
@@ -760,6 +660,40 @@ function ListDetailPage() {
     }
   }, [itemName, editingItemId])
 
+  useEffect(() => {
+    setItems(fetchedItems)
+  }, [fetchedItems])
+
+  const toggleItem = async (id: string) => {
+    console.log('✅ toggleItem CHAMADO', id)
+    const current = items.find(item => item.id === id)
+    if (!current) {
+      console.log('❌ toggleItem CANCELADO - item não encontrado')
+      return
+    }
+    console.log('✅ toggleItem - alternando checked:', id, !current.checked)
+
+    // UI instantanea
+    setItems(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, checked: !item.checked } : item
+      )
+    )
+
+    // Persistencia assincrona sem bloquear UI
+    try {
+      await toggleCheck({ id, checked: !current.checked })
+    } catch (error) {
+      console.error('Erro ao alternar item:', error)
+      // Reverte se falhar no backend
+      setItems(prev =>
+        prev.map(item =>
+          item.id === id ? { ...item, checked: current.checked } : item
+        )
+      )
+    }
+  }
+
   // Redirecionar se não tiver listId
   if (!listId) {
     toast.error('Selecione uma lista')
@@ -768,6 +702,7 @@ function ListDetailPage() {
   }
 
   const handleAddItem = async () => {
+    console.log('✅ handleAddItem CHAMADO', { itemName, itemQty, itemUnit, itemCategory })
     if (!itemName.trim() || !listId) {
       toast.error('Nome do item é obrigatório')
       return
@@ -793,6 +728,7 @@ function ListDetailPage() {
   }
 
   const handleEditItem = (item: any) => {
+    console.log('✅ handleEditItem CHAMADO', item.id, item.name)
     setEditingItemId(item.id)
     setItemName(item.name)
     setItemQty(item.qty?.toString() || '1')
@@ -802,18 +738,41 @@ function ListDetailPage() {
   }
 
   const handleSaveEditItem = async () => {
+    console.log('✅ handleSaveEditItem CHAMADO', editingItemId, itemName)
     if (!editingItemId || !itemName.trim() || !listId) {
+      console.log('❌ handleSaveEditItem CANCELADO - dados inválidos')
       return
     }
+
+    const previousItems = items
+    const parsedQty = itemQty ? parseInt(itemQty) : undefined
+    const optimisticName = itemName.trim()
+    const optimisticUnit = itemUnit || undefined
+    const optimisticCategory = itemCategory || undefined
+
+    setItems(prev =>
+      prev.map(item =>
+        item.id === editingItemId
+          ? {
+              ...item,
+              name: optimisticName,
+              qty: parsedQty ?? item.qty,
+              unit: optimisticUnit,
+              category: optimisticCategory,
+            }
+          : item
+      )
+    )
+    console.log('edit', editingItemId, { name: optimisticName, qty: parsedQty, unit: optimisticUnit, category: optimisticCategory })
 
     try {
       await updateItem({
         id: editingItemId,
         updates: {
-          name: itemName.trim(),
-          qty: itemQty ? parseInt(itemQty) : undefined,
-          unit: itemUnit || undefined,
-          category: itemCategory || undefined,
+          name: optimisticName,
+          qty: parsedQty,
+          unit: optimisticUnit,
+          category: optimisticCategory,
         },
       })
       setShowEditItemModal(false)
@@ -825,63 +784,38 @@ function ListDetailPage() {
       toast.success('Item atualizado!')
     } catch (error: any) {
       console.error('Erro ao atualizar item:', error)
+      setItems(previousItems)
       toast.error(error.message || 'Erro ao atualizar item')
     }
   }
 
   const handleDeleteItem = async () => {
+    console.log('✅ handleDeleteItem CHAMADO', editingItemId)
     if (!editingItemId || !listId) {
+      console.log('❌ handleDeleteItem CANCELADO - sem ID')
       return
     }
 
+    const currentId = editingItemId
+    const previousItems = items
+    setItems(prev => prev.filter(item => item.id !== currentId))
+    console.log('✅ Item removido da UI (optimistic)', currentId)
+
     try {
-      await deleteItem(editingItemId)
+      await deleteItem(currentId)
       setShowDeleteItemConfirm(false)
       setEditingItemId(null)
       toast.success('Item removido!')
     } catch (error: any) {
       console.error('Erro ao remover item:', error)
+      setItems(previousItems)
       toast.error(error.message || 'Erro ao remover item')
     }
   }
 
-  const handleEditList = () => {
-    if (list) {
-      setListName(list.name)
-      setShowEditListModal(true)
-    }
-  }
-
-  const handleSaveEditList = async () => {
-    if (!listId || !listName.trim()) {
-      return
-    }
-
-    try {
-      await renameList({ id: listId, name: listName.trim() })
-      setShowEditListModal(false)
-      setListName('')
-      toast.success('Lista renomeada!')
-    } catch (error: any) {
-      console.error('Erro ao renomear lista:', error)
-      toast.error(error.message || 'Erro ao renomear lista')
-    }
-  }
-
-  const handleDeleteList = async () => {
-    if (!listId) {
-      return
-    }
-
-    try {
-      await deleteList(listId)
-      toast.success('Lista deletada!')
-      navigate('/lists')
-    } catch (error: any) {
-      console.error('Erro ao deletar lista:', error)
-      toast.error(error.message || 'Erro ao deletar lista')
-    }
-  }
+  const totalItems = items.length
+  const checkedItems = items.filter(item => item.checked).length
+  const uncheckedItems = totalItems - checkedItems
 
   if (listLoading || itemsLoading) {
     return <LoadingSpinner />
@@ -893,7 +827,17 @@ function ListDetailPage() {
         <ErrorState>
           <ErrorTitle>Lista não encontrada</ErrorTitle>
           <p>A lista que você está procurando não existe ou foi removida.</p>
-          <Button $variant="primary" onClick={() => navigate('/lists')} style={{ marginTop: '20px' }}>
+          <Button 
+            type="button"
+            $variant="primary" 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Voltar para listas (erro)')
+              navigate('/lists')
+            }} 
+            style={{ marginTop: '20px' }}
+          >
             Voltar para listas
           </Button>
         </ErrorState>
@@ -906,7 +850,17 @@ function ListDetailPage() {
       <Container>
         <ErrorState>
           <ErrorTitle>ID da lista não fornecido</ErrorTitle>
-          <Button $variant="primary" onClick={() => navigate('/lists')} style={{ marginTop: '20px' }}>
+          <Button 
+            type="button"
+            $variant="primary" 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Voltar para listas (erro)')
+              navigate('/lists')
+            }} 
+            style={{ marginTop: '20px' }}
+          >
             Voltar para listas
           </Button>
         </ErrorState>
@@ -917,27 +871,23 @@ function ListDetailPage() {
   return (
     <>
       <Container>
-        <StickyHeader>
-          <HeaderContent>
-            <BackButton onClick={() => navigate('/lists')}>←</BackButton>
-            <Title>{list.name}</Title>
-            <HeaderActions>
-              <IconButton onClick={handleEditList} title="Renomear">
-                ✏️
-              </IconButton>
-              <IconButton
-                className="danger"
-                onClick={() => setShowDeleteListConfirm(true)}
-                title="Deletar"
-              >
-                🗑️
-              </IconButton>
-            </HeaderActions>
-          </HeaderContent>
-        </StickyHeader>
+        <ListHeader
+          listId={listId}
+          name={list.name}
+          onBack={() => navigate('/lists')}
+        />
 
         <Content>
-          <AddButton onClick={() => setShowAddItemModal(true)} disabled={isAdding}>
+          <AddButton 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ AddButton CLICADO')
+              setShowAddItemModal(true)
+            }} 
+            disabled={isAdding}
+          >
             {isAdding ? 'Adicionando...' : '+ Adicionar Item'}
           </AddButton>
 
@@ -970,10 +920,15 @@ function ListDetailPage() {
                   <Checkbox
                     type="checkbox"
                     checked={item.checked}
-                    onChange={() => toggleCheck({ id: item.id, checked: !item.checked })}
+                    onChange={() => toggleItem(item.id)}
                   />
                   <ItemContent>
-                    <ItemName checked={item.checked}>{item.name}</ItemName>
+                    <ItemName
+                      checked={item.checked}
+                      style={{ textDecoration: item.checked ? 'line-through' : 'none' }}
+                    >
+                      {item.name}
+                    </ItemName>
                     {(item.qty || item.unit) && (
                       <QtyAndUnitContainer>
                         {item.qty && <ItemQty>{item.qty}</ItemQty>}
@@ -986,12 +941,25 @@ function ListDetailPage() {
                     )}
                   </ItemContent>
                   <ItemActions>
-                    <ActionButton onClick={() => handleEditItem(item)} title="Editar">
+                    <ActionButton 
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        console.log('✅ Editar Item CLICADO', item.id)
+                        handleEditItem(item)
+                      }} 
+                      title="Editar"
+                    >
                       ✏️
                     </ActionButton>
                     <ActionButton
+                      type="button"
                       className="danger"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        console.log('✅ Deletar Item CLICADO', item.id)
                         setEditingItemId(item.id)
                         setShowDeleteItemConfirm(true)
                       }}
@@ -1012,13 +980,19 @@ function ListDetailPage() {
       <BottomSheet $show={showAddItemModal} onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>Adicionar Item</ModalTitle>
-          <CloseButton onClick={() => {
-            setShowAddItemModal(false)
-            setItemName('')
-            setItemQty('1')
-            setItemUnit('un')
-            setItemCategory('')
-          }}>✕</CloseButton>
+          <CloseButton 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Fechar Modal Adicionar')
+              setShowAddItemModal(false)
+              setItemName('')
+              setItemQty('1')
+              setItemUnit('un')
+              setItemCategory('')
+            }}
+          >✕</CloseButton>
         </ModalHeader>
         
         <FormGroup>
@@ -1073,18 +1047,30 @@ function ListDetailPage() {
         </FormGroup>
 
         <ModalActions>
-          <Button onClick={() => {
-            setShowAddItemModal(false)
-            setItemName('')
-            setItemQty('1')
-            setItemUnit('un')
-            setItemCategory('')
-          }}>
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Cancelar Adicionar Item')
+              setShowAddItemModal(false)
+              setItemName('')
+              setItemQty('1')
+              setItemUnit('un')
+              setItemCategory('')
+            }}
+          >
             Cancelar
           </Button>
           <Button 
+            type="button"
             $variant="primary" 
-            onClick={handleAddItem} 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Adicionar Item CLICADO')
+              handleAddItem()
+            }} 
             disabled={isAdding || !itemName.trim()}
           >
             {isAdding ? 'Adicionando...' : 'Adicionar'}
@@ -1097,14 +1083,20 @@ function ListDetailPage() {
       <BottomSheet $show={showEditItemModal} onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>Editar Item</ModalTitle>
-          <CloseButton onClick={() => {
-            setShowEditItemModal(false)
-            setEditingItemId(null)
-            setItemName('')
-            setItemQty('1')
-            setItemUnit('un')
-            setItemCategory('')
-          }}>✕</CloseButton>
+          <CloseButton 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Fechar Modal Editar Item')
+              setShowEditItemModal(false)
+              setEditingItemId(null)
+              setItemName('')
+              setItemQty('1')
+              setItemUnit('un')
+              setItemCategory('')
+            }}
+          >✕</CloseButton>
         </ModalHeader>
         
         <FormGroup>
@@ -1145,92 +1137,34 @@ function ListDetailPage() {
         </FormGroup>
 
         <ModalActions>
-          <Button onClick={() => {
-            setShowEditItemModal(false)
-            setEditingItemId(null)
-            setItemName('')
-            setItemQty('1')
-            setItemUnit('un')
-            setItemCategory('')
-          }}>
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Cancelar Editar Item')
+              setShowEditItemModal(false)
+              setEditingItemId(null)
+              setItemName('')
+              setItemQty('1')
+              setItemUnit('un')
+              setItemCategory('')
+            }}
+          >
             Cancelar
           </Button>
           <Button 
+            type="button"
             $variant="primary" 
-            onClick={handleSaveEditItem} 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Salvar Item CLICADO')
+              handleSaveEditItem()
+            }} 
             disabled={!itemName.trim()}
           >
             Salvar
-          </Button>
-        </ModalActions>
-      </BottomSheet>
-
-      {/* Modal Editar Lista */}
-      <Overlay $show={showEditListModal} onClick={() => setShowEditListModal(false)} />
-      <BottomSheet $show={showEditListModal} onClick={e => e.stopPropagation()}>
-        <ModalHeader>
-          <ModalTitle>Renomear Lista</ModalTitle>
-          <CloseButton onClick={() => {
-            setShowEditListModal(false)
-            setListName('')
-          }}>✕</CloseButton>
-        </ModalHeader>
-        
-        <FormGroup>
-          <Label>Nome da lista</Label>
-          <Input
-            type="text"
-            value={listName}
-            onChange={e => setListName(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                handleSaveEditList()
-              }
-            }}
-            autoFocus
-          />
-        </FormGroup>
-
-        <ModalActions>
-          <Button onClick={() => {
-            setShowEditListModal(false)
-            setListName('')
-          }}>
-            Cancelar
-          </Button>
-          <Button 
-            $variant="primary" 
-            onClick={handleSaveEditList} 
-            disabled={isRenaming || !listName.trim()}
-          >
-            {isRenaming ? 'Salvando...' : 'Salvar'}
-          </Button>
-        </ModalActions>
-      </BottomSheet>
-
-      {/* Modal Confirmar Deletar Lista */}
-      <Overlay $show={showDeleteListConfirm} onClick={() => setShowDeleteListConfirm(false)} />
-      <BottomSheet $show={showDeleteListConfirm} onClick={e => e.stopPropagation()}>
-        <ModalHeader>
-          <ModalTitle>Confirmar Exclusão</ModalTitle>
-          <CloseButton onClick={() => setShowDeleteListConfirm(false)}>✕</CloseButton>
-        </ModalHeader>
-        
-        <p style={{ marginBottom: '24px', color: '#666', lineHeight: '1.6' }}>
-          Tem certeza que deseja deletar esta lista? Todos os {totalItems} {totalItems === 1 ? 'item' : 'itens'} serão removidos permanentemente.
-        </p>
-
-        <ModalActions>
-          <Button onClick={() => setShowDeleteListConfirm(false)}>
-            Cancelar
-          </Button>
-          <Button 
-            $variant="danger" 
-            onClick={handleDeleteList} 
-            disabled={isDeleting}
-          >
-            {isDeleting ? 'Deletando...' : 'Deletar Lista'}
           </Button>
         </ModalActions>
       </BottomSheet>
@@ -1240,10 +1174,16 @@ function ListDetailPage() {
       <BottomSheet $show={showDeleteItemConfirm} onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>Confirmar Exclusão</ModalTitle>
-          <CloseButton onClick={() => {
-            setShowDeleteItemConfirm(false)
-            setEditingItemId(null)
-          }}>✕</CloseButton>
+          <CloseButton 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Fechar Modal Deletar Item')
+              setShowDeleteItemConfirm(false)
+              setEditingItemId(null)
+            }}
+          >✕</CloseButton>
         </ModalHeader>
         
         <p style={{ marginBottom: '24px', color: '#666', lineHeight: '1.6' }}>
@@ -1251,15 +1191,27 @@ function ListDetailPage() {
         </p>
 
         <ModalActions>
-          <Button onClick={() => {
-            setShowDeleteItemConfirm(false)
-            setEditingItemId(null)
-          }}>
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Cancelar Deletar Item')
+              setShowDeleteItemConfirm(false)
+              setEditingItemId(null)
+            }}
+          >
             Cancelar
           </Button>
           <Button 
+            type="button"
             $variant="danger" 
-            onClick={handleDeleteItem}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Confirmar Deletar Item CLICADO')
+              handleDeleteItem()
+            }}
           >
             Deletar
           </Button>

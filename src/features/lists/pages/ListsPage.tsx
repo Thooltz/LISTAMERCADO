@@ -104,6 +104,8 @@ const AddButton = styled.button`
   position: relative;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  z-index: 10;
 
   @media (max-width: 480px) {
     padding: 16px 20px;
@@ -158,6 +160,9 @@ const LogoutButton = styled.button`
   justify-content: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+  position: relative;
+  z-index: 10;
 
   &:active {
     background: rgba(231, 76, 60, 0.1);
@@ -198,7 +203,8 @@ const ListCard = styled.div`
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: 1px solid rgba(255, 255, 255, 0.3);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  pointer-events: auto;
 
   &::before {
     content: '';
@@ -211,6 +217,8 @@ const ListCard = styled.div`
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    z-index: 1;
   }
 
   &::after {
@@ -223,6 +231,8 @@ const ListCard = styled.div`
     background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
     opacity: 0;
     transition: opacity 0.4s;
+    pointer-events: none;
+    z-index: 1;
   }
 
   &:active {
@@ -282,6 +292,9 @@ const IconButton = styled.button`
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+  position: relative;
+  z-index: 10;
 
   &:active {
     background: rgba(233, 236, 239, 0.9);
@@ -434,6 +447,9 @@ const CloseButton = styled.button`
   justify-content: center;
   border-radius: 8px;
   transition: all 0.2s;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1001;
 
   &:active {
     background: #e0e0e0;
@@ -516,6 +532,7 @@ function ListsPage() {
   const [deletingListId, setDeletingListId] = useState<string | null>(null)
 
   const handleLogout = async () => {
+    console.log('✅ handleLogout CHAMADO')
     try {
       await signOut()
       toast.success('Logout realizado!')
@@ -527,7 +544,9 @@ function ListsPage() {
   }
 
   const handleCreateList = async () => {
+    console.log('✅ handleCreateList CHAMADO', listName)
     if (!listName.trim()) {
+      console.log('❌ handleCreateList CANCELADO - nome vazio')
       return
     }
 
@@ -547,13 +566,16 @@ function ListsPage() {
 
   const handleEditList = (listId: string, currentName: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    console.log('✅ handleEditList CHAMADO', listId, currentName)
     setEditingListId(listId)
     setListName(currentName)
     setShowEditModal(true)
   }
 
   const handleSaveEdit = async () => {
+    console.log('✅ handleSaveEdit CHAMADO', editingListId, listName)
     if (!editingListId || !listName.trim()) {
+      console.log('❌ handleSaveEdit CANCELADO - dados inválidos')
       return
     }
 
@@ -570,12 +592,15 @@ function ListsPage() {
 
   const handleDeleteList = (listId: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    console.log('✅ handleDeleteList CHAMADO', listId)
     setDeletingListId(listId)
     setShowDeleteConfirm(true)
   }
 
   const handleConfirmDelete = async () => {
+    console.log('✅ handleConfirmDelete CHAMADO', deletingListId)
     if (!deletingListId) {
+      console.log('❌ handleConfirmDelete CANCELADO - sem ID')
       return
     }
 
@@ -600,10 +625,28 @@ function ListsPage() {
           <HeaderContent>
             <Title>Minhas Listas</Title>
             <HeaderActions>
-              <AddButton onClick={() => setShowCreateModal(true)} disabled={isCreating}>
+              <AddButton 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  console.log('✅ Nova Lista CLICADO')
+                  setShowCreateModal(true)
+                }} 
+                disabled={isCreating}
+              >
                 {isCreating ? '...' : '+ Nova'}
               </AddButton>
-              <LogoutButton onClick={handleLogout} title="Sair">
+              <LogoutButton 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  console.log('✅ Logout CLICADO')
+                  handleLogout()
+                }} 
+                title="Sair"
+              >
                 🚪
               </LogoutButton>
             </HeaderActions>
@@ -615,7 +658,16 @@ function ListsPage() {
             <EmptyState>
               <EmptyTitle>Nenhuma lista ainda</EmptyTitle>
               <EmptyText>Crie sua primeira lista para começar!</EmptyText>
-              <AddButton onClick={() => setShowCreateModal(true)} disabled={isCreating}>
+              <AddButton 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  console.log('✅ Criar Primeira Lista CLICADO')
+                  setShowCreateModal(true)
+                }} 
+                disabled={isCreating}
+              >
                 {isCreating ? 'Criando...' : '+ Criar primeira lista'}
               </AddButton>
             </EmptyState>
@@ -640,7 +692,15 @@ function ListsPage() {
       <BottomSheet $show={showCreateModal} onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>Nova Lista</ModalTitle>
-          <CloseButton onClick={() => setShowCreateModal(false)}>✕</CloseButton>
+          <CloseButton 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Fechar Modal Criar Lista')
+              setShowCreateModal(false)
+            }}
+          >✕</CloseButton>
         </ModalHeader>
         
         <FormGroup>
@@ -663,15 +723,27 @@ function ListsPage() {
         </FormGroup>
 
         <ModalActions>
-          <Button onClick={() => {
-            setShowCreateModal(false)
-            setListName('')
-          }}>
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Cancelar Criar Lista')
+              setShowCreateModal(false)
+              setListName('')
+            }}
+          >
             Cancelar
           </Button>
           <Button 
+            type="button"
             $variant="primary" 
-            onClick={handleCreateList} 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Criar Lista CLICADO')
+              handleCreateList()
+            }} 
             disabled={isCreating || !listName.trim()}
           >
             {isCreating ? 'Criando...' : 'Criar'}
@@ -684,11 +756,17 @@ function ListsPage() {
       <BottomSheet $show={showEditModal} onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>Editar Lista</ModalTitle>
-          <CloseButton onClick={() => {
-            setShowEditModal(false)
-            setEditingListId(null)
-            setListName('')
-          }}>✕</CloseButton>
+          <CloseButton 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Fechar Modal Editar Lista')
+              setShowEditModal(false)
+              setEditingListId(null)
+              setListName('')
+            }}
+          >✕</CloseButton>
         </ModalHeader>
         
         <FormGroup>
@@ -710,16 +788,28 @@ function ListsPage() {
         </FormGroup>
 
         <ModalActions>
-          <Button onClick={() => {
-            setShowEditModal(false)
-            setEditingListId(null)
-            setListName('')
-          }}>
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Cancelar Editar Lista')
+              setShowEditModal(false)
+              setEditingListId(null)
+              setListName('')
+            }}
+          >
             Cancelar
           </Button>
           <Button 
+            type="button"
             $variant="primary" 
-            onClick={handleSaveEdit} 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Salvar Lista CLICADO')
+              handleSaveEdit()
+            }} 
             disabled={!listName.trim()}
           >
             Salvar
@@ -732,10 +822,16 @@ function ListsPage() {
       <BottomSheet $show={showDeleteConfirm} onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>Confirmar Exclusão</ModalTitle>
-          <CloseButton onClick={() => {
-            setShowDeleteConfirm(false)
-            setDeletingListId(null)
-          }}>✕</CloseButton>
+          <CloseButton 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Fechar Modal Deletar Lista')
+              setShowDeleteConfirm(false)
+              setDeletingListId(null)
+            }}
+          >✕</CloseButton>
         </ModalHeader>
         
         <p style={{ marginBottom: '24px', color: '#666', lineHeight: '1.6' }}>
@@ -743,15 +839,27 @@ function ListsPage() {
         </p>
 
         <ModalActions>
-          <Button onClick={() => {
-            setShowDeleteConfirm(false)
-            setDeletingListId(null)
-          }}>
+          <Button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Cancelar Deletar Lista')
+              setShowDeleteConfirm(false)
+              setDeletingListId(null)
+            }}
+          >
             Cancelar
           </Button>
           <Button 
+            type="button"
             $variant="danger" 
-            onClick={handleConfirmDelete} 
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Confirmar Deletar Lista CLICADO')
+              handleConfirmDelete()
+            }} 
             disabled={isDeleting}
           >
             {isDeleting ? 'Deletando...' : 'Deletar'}
@@ -784,14 +892,26 @@ function ListCardWithPreview({
         <ListTitle>{list.name}</ListTitle>
         <ListActions onClick={(e) => e.stopPropagation()}>
           <IconButton
-            onClick={(e) => onEdit(list.id, list.name, e)}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Editar Lista (card) CLICADO', list.id)
+              onEdit(list.id, list.name, e)
+            }}
             title="Editar"
           >
             ✏️
           </IconButton>
           <IconButton
+            type="button"
             className="danger"
-            onClick={(e) => onDelete(list.id, e)}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('✅ Deletar Lista (card) CLICADO', list.id)
+              onDelete(list.id, e)
+            }}
             title="Deletar"
           >
             🗑️
