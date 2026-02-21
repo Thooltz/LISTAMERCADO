@@ -7,23 +7,32 @@ import styled from 'styled-components'
 const Container = styled.div`
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  height: 100vh;
-  height: -webkit-fill-available;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-attachment: fixed;
-  position: relative;
-  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 
   @media (max-width: 480px) {
     padding: 16px;
     align-items: flex-start;
     padding-top: 40px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   &::before {
