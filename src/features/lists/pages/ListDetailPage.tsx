@@ -59,13 +59,13 @@ const Content = styled.div<{ hasFooter?: boolean }>`
   max-width: 600px;
   margin: 0 auto;
   padding: 16px;
-  padding-bottom: ${props => props.hasFooter ? '120px' : '16px'};
+  padding-bottom: ${props => props.hasFooter ? '90px' : '16px'};
   position: relative;
   z-index: 1;
 
   @media (max-width: 480px) {
-    padding: 12px;
-    padding-bottom: ${props => props.hasFooter ? '140px' : '12px'};
+    padding: 16px;
+    padding-bottom: ${props => props.hasFooter ? '90px' : '16px'};
   }
 `
 
@@ -184,10 +184,11 @@ const ItemsList = styled.div`
 `
 
 const ItemCard = styled.div<{ checked: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 20px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 12px;
+  padding: 16px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -196,19 +197,19 @@ const ItemCard = styled.div<{ checked: boolean }>`
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all var(--transition-slow);
   opacity: ${props => (props.checked ? 0.65 : 1)};
-  min-height: 76px;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   animation: slideUp 0.4s ease-out;
   -webkit-tap-highlight-color: transparent;
   pointer-events: auto;
   touch-action: manipulation;
 
   @media (max-width: 480px) {
-    padding: 18px 16px;
-    gap: 12px;
-    min-height: 72px;
-    border-radius: 18px;
+    padding: 16px;
+    gap: 10px;
+    border-radius: 16px;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
   }
 
   &::before {
@@ -283,14 +284,42 @@ const Checkbox = styled.input`
 `
 
 const ItemContent = styled.div`
-  flex: 1;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
   min-width: 0;
   pointer-events: auto;
   position: relative;
   z-index: 50;
+  grid-column: 2;
+  grid-row: 1 / 3;
+
+  @media (max-width: 480px) {
+    gap: 6px;
+    grid-row: 1;
+  }
+`
+
+const ItemTopRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+`
+
+const ItemBottomRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+
+  @media (max-width: 480px) {
+    grid-column: 1 / 4;
+    grid-row: 2;
+    margin-top: 4px;
+  }
 `
 
 const ItemName = styled.span<{ checked: boolean }>`
@@ -300,13 +329,19 @@ const ItemName = styled.span<{ checked: boolean }>`
   color: ${props => (props.checked ? '#999' : '#1a1a1a')};
   flex: 1;
   min-width: 0;
-  word-break: break-word;
   letter-spacing: -0.2px;
-  line-height: 1.5;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  hyphens: auto;
 
   @media (max-width: 480px) {
-    font-size: 1.1rem;
-    line-height: 1.6;
+    font-size: 1rem;
+    line-height: 1.5;
   }
 `
 
@@ -370,9 +405,17 @@ const ItemActions = styled.div`
   position: relative;
   z-index: 150;
   touch-action: manipulation;
+  grid-column: 3;
+  grid-row: 1;
+  align-self: start;
+  flex-direction: column;
 
   @media (max-width: 480px) {
-    gap: 10px;
+    gap: 6px;
+    flex-direction: row;
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
   }
 `
 
@@ -384,8 +427,8 @@ const ActionButton = styled.button`
   cursor: pointer;
   color: #666;
   padding: 8px;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 40px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -399,11 +442,13 @@ const ActionButton = styled.button`
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
+  box-sizing: border-box;
 
   @media (max-width: 480px) {
-    min-width: 48px;
-    min-height: 48px;
+    min-width: 44px;
+    min-height: 44px;
     padding: 10px;
+    font-size: 1rem;
   }
 
   &:active {
@@ -465,14 +510,14 @@ const TotalFooter = styled.div`
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border-top: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
   z-index: 100;
   max-width: 600px;
   margin: 0 auto;
 
   @media (max-width: 480px) {
-    padding: 18px 16px;
+    padding: 16px;
   }
 `
 
@@ -510,6 +555,113 @@ const RemainingValue = styled.span<{ $isExceeded: boolean }>`
   font-size: 1.1rem;
   font-weight: 700;
   color: ${props => props.$isExceeded ? '#ef4444' : '#10b981'};
+`
+
+const BudgetCard = styled.div`
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-radius: 18px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 50;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  pointer-events: auto;
+
+  @media (max-width: 480px) {
+    border-radius: 16px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+`
+
+const BudgetHeader = styled.button`
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 14px 16px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  touch-action: manipulation;
+  position: relative;
+  z-index: 60;
+  transition: background-color 0.2s ease;
+  pointer-events: auto;
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  @media (max-width: 480px) {
+    padding: 14px 16px;
+    min-height: 56px;
+  }
+`
+
+const BudgetHeaderLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+`
+
+const BudgetHeaderText = styled.span`
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
+`
+
+const BudgetMini = styled.span`
+  font-size: 12px;
+  opacity: 0.7;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
+`
+
+const BudgetToggleIcon = styled.span<{ $isOpen: boolean }>`
+  font-size: 18px;
+  transition: transform 0.25s ease;
+  transform: ${props => props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
+  display: inline-block;
+  flex-shrink: 0;
+  margin-left: 12px;
+  color: #666;
+`
+
+const BudgetContent = styled.div<{ $isOpen: boolean }>`
+  max-height: ${props => props.$isOpen ? '400px' : '0'};
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: ${props => props.$isOpen ? '0 16px 16px 16px' : '0 16px'};
+
+  @media (max-width: 480px) {
+    padding: ${props => props.$isOpen ? '0 16px 16px 16px' : '0 16px'};
+  }
 `
 
 // Modal
@@ -750,6 +902,7 @@ function ListDetailPage() {
   const [budgetRaw, setBudgetRaw] = useState<string>('')
   const lastSavedBudgetRef = useRef<string>('')
   const isEditingBudgetRef = useRef(false)
+  const [isBudgetOpen, setIsBudgetOpen] = useState(false)
   
   // Estados para preços dos itens com autosave (mapa de itemId -> rawValue)
   const [itemPricesRaw, setItemPricesRaw] = useState<Record<string, string>>({})
@@ -1099,7 +1252,7 @@ function ListDetailPage() {
           onBack={() => navigate('/lists')}
         />
 
-        <Content hasFooter={!!(totalItems > 0 || budgetRaw || budgetValue !== null)}>
+        <Content hasFooter={totalItems > 0}>
           <AddButton 
             type="button"
             onClick={(e) => {
@@ -1130,6 +1283,85 @@ function ListDetailPage() {
             </StatsBar>
           )}
 
+          {/* Seção de Orçamento Colapsável */}
+          {(totalItems > 0 || budgetRaw || budgetValue !== null) && (
+            <BudgetCard>
+              <BudgetHeader
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsBudgetOpen(prev => !prev)
+                }}
+                onPointerDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation()
+                }}
+              >
+                <BudgetHeaderLeft>
+                  <BudgetHeaderText>
+                    📊 Orçamento da compra
+                  </BudgetHeaderText>
+                  {!isBudgetOpen && totalItems > 0 && (
+                    <BudgetMini>
+                      Total: {totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      {budgetValue !== null && remaining !== null && (
+                        <> • Restante: {remaining.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</>
+                      )}
+                    </BudgetMini>
+                  )}
+                </BudgetHeaderLeft>
+                <BudgetToggleIcon $isOpen={isBudgetOpen}>
+                  ⌄
+                </BudgetToggleIcon>
+              </BudgetHeader>
+              <BudgetContent $isOpen={isBudgetOpen}>
+                <TotalContent>
+                  {budgetValue !== null && !isNaN(budgetValue) && (
+                    <TotalRow>
+                      <TotalLabel>🧮 Orçamento:</TotalLabel>
+                      <TotalValue>
+                        {budgetValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </TotalValue>
+                    </TotalRow>
+                  )}
+                  <TotalRow>
+                    <TotalLabel>💰 Total da compra:</TotalLabel>
+                    <TotalValue $isExceeded={isExceeded}>
+                      {totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </TotalValue>
+                  </TotalRow>
+                  {budgetValue !== null && remaining !== null && (
+                    <TotalRow>
+                      <TotalLabel>💸 Restante:</TotalLabel>
+                      <RemainingValue $isExceeded={isExceeded}>
+                        {remaining.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        {isExceeded && ' ⚠️ Orçamento excedido'}
+                      </RemainingValue>
+                    </TotalRow>
+                  )}
+                  <TotalRow style={{ marginTop: '12px' }}>
+                    <BudgetInput
+                      value={list?.budget ?? null}
+                      onChange={() => {
+                        // onChange será chamado no onBlur, mas o autosave usa rawValue
+                      }}
+                      onRawChange={(rawValue) => {
+                        setBudgetRaw(rawValue)
+                      }}
+                      onEditingChange={(isEditing) => {
+                        isEditingBudgetRef.current = isEditing
+                      }}
+                      placeholder={budgetValue !== null ? "Editar orçamento" : "Quanto você tem para gastar? (opcional)"}
+                    />
+                  </TotalRow>
+                </TotalContent>
+              </BudgetContent>
+            </BudgetCard>
+          )}
+
           <ItemsList>
             {items.length === 0 ? (
               <EmptyState>
@@ -1154,48 +1386,57 @@ function ListDetailPage() {
                       e.stopPropagation()
                     }}
                     aria-label={item.checked ? `Desmarcar ${item.name}` : `Marcar ${item.name} como concluído`}
+                    style={{ 
+                      gridColumn: '1', 
+                      gridRow: '1',
+                      alignSelf: 'start',
+                      marginTop: '2px'
+                    }}
                   />
                   <ItemContent>
-                    <ItemName
-                      checked={item.checked}
-                      style={{ textDecoration: item.checked ? 'line-through' : 'none' }}
-                    >
-                      {item.name}
-                    </ItemName>
-                    {(item.qty || item.unit) && (
-                      <QtyAndUnitContainer>
-                        {item.qty && <ItemQty>{item.qty}</ItemQty>}
-                        {item.unit && (
-                          <UnitBadge $isUn={item.unit === 'un'}>
-                            {item.unit}
-                          </UnitBadge>
-                        )}
-                      </QtyAndUnitContainer>
-                    )}
-                    <PriceInput
-                      value={item.price}
-                      onChange={(price) => {
-                        // Atualização imediata na UI
-                        setItems(prev =>
-                          prev.map(i =>
-                            i.id === item.id ? { ...i, price } : i
+                    <ItemTopRow>
+                      <ItemName
+                        checked={item.checked}
+                        style={{ textDecoration: item.checked ? 'line-through' : 'none' }}
+                      >
+                        {item.name}
+                      </ItemName>
+                    </ItemTopRow>
+                    <ItemBottomRow>
+                      {(item.qty || item.unit) && (
+                        <QtyAndUnitContainer>
+                          {item.qty && <ItemQty>{item.qty}</ItemQty>}
+                          {item.unit && (
+                            <UnitBadge $isUn={item.unit === 'un'}>
+                              {item.unit}
+                            </UnitBadge>
+                          )}
+                        </QtyAndUnitContainer>
+                      )}
+                      <PriceInput
+                        value={item.price}
+                        onChange={(price) => {
+                          // Atualização imediata na UI
+                          setItems(prev =>
+                            prev.map(i =>
+                              i.id === item.id ? { ...i, price } : i
+                            )
                           )
-                        )
-                        // Autosave será feito pelo debounce
-                      }}
-                      onRawChange={(rawValue) => {
-                        // Atualiza o estado raw para o debounce
-                        setItemPricesRaw(prev => ({
-                          ...prev,
-                          [item.id]: rawValue,
-                        }))
-                      }}
-                      placeholder="0,00"
-                      onClick={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      style={{ marginLeft: '8px' }}
-                    />
+                          // Autosave será feito pelo debounce
+                        }}
+                        onRawChange={(rawValue) => {
+                          // Atualiza o estado raw para o debounce
+                          setItemPricesRaw(prev => ({
+                            ...prev,
+                            [item.id]: rawValue,
+                          }))
+                        }}
+                        placeholder="0,00"
+                        onClick={(e) => e.stopPropagation()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                      />
+                    </ItemBottomRow>
                   </ItemContent>
                   <ItemActions>
                     <ActionButton 
@@ -1253,49 +1494,17 @@ function ListDetailPage() {
           </ItemsList>
         </Content>
 
-        {/* Rodapé fixo com Total */}
-        {(totalItems > 0 || budgetRaw || budgetValue !== null) && (
+        {/* Footer fixo simplificado com Total */}
+        {totalItems > 0 && (
           <TotalFooter>
-            <TotalContent>
-              {budgetValue !== null && !isNaN(budgetValue) && (
-                <TotalRow>
-                  <TotalLabel>🧮 Orçamento:</TotalLabel>
-                  <TotalValue>
-                    {budgetValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </TotalValue>
-                </TotalRow>
-              )}
-              <TotalRow>
-                <TotalLabel>💰 Total da compra:</TotalLabel>
-                <TotalValue $isExceeded={isExceeded}>
-                  {totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </TotalValue>
-              </TotalRow>
-              {budgetValue !== null && remaining !== null && (
-                <TotalRow>
-                  <TotalLabel>💸 Restante:</TotalLabel>
-                  <RemainingValue $isExceeded={isExceeded}>
-                    {remaining.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    {isExceeded && ' ⚠️ Orçamento excedido'}
-                  </RemainingValue>
-                </TotalRow>
-              )}
-              <TotalRow style={{ marginTop: budgetValue !== null ? '8px' : '0' }}>
-                <BudgetInput
-                  value={list?.budget ?? null}
-                  onChange={() => {
-                    // onChange será chamado no onBlur, mas o autosave usa rawValue
-                  }}
-                  onRawChange={(rawValue) => {
-                    setBudgetRaw(rawValue)
-                  }}
-                  onEditingChange={(isEditing) => {
-                    isEditingBudgetRef.current = isEditing
-                  }}
-                  placeholder={budgetValue !== null ? "Editar orçamento" : "Quanto você tem para gastar? (opcional)"}
-                />
-              </TotalRow>
-            </TotalContent>
+            <TotalRow style={{ margin: 0 }}>
+              <TotalLabel style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                💰 Total:
+              </TotalLabel>
+              <TotalValue $isExceeded={isExceeded} style={{ fontSize: '1.3rem' }}>
+                {totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </TotalValue>
+            </TotalRow>
           </TotalFooter>
         )}
       </Container>

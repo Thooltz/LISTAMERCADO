@@ -4,11 +4,11 @@ import { parseBRMoneyToNumber, formatNumberToBRMoney } from '../utils/money'
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid rgba(224, 224, 224, 0.5);
-  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
   font-size: 16px; /* Mínimo 16px para evitar zoom no iOS */
-  background: rgba(250, 250, 250, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   color: #1a1a1a;
   font-weight: 600;
@@ -17,11 +17,12 @@ const Input = styled.input`
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   min-height: 48px;
+  margin-top: 10px;
 
   &:focus {
     border-color: #667eea;
     outline: none;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 1);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
   }
 
@@ -30,9 +31,10 @@ const Input = styled.input`
   }
 
   @media (max-width: 480px) {
-    padding: 14px 18px;
+    padding: 12px 14px;
     font-size: 16px;
-    min-height: 52px;
+    min-height: 48px;
+    border-radius: 12px;
   }
 `
 
