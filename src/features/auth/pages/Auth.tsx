@@ -7,22 +7,23 @@ import styled from 'styled-components'
 const Container = styled.div`
   min-height: 100vh;
   min-height: -webkit-fill-available;
+  height: 100vh;
+  height: -webkit-fill-available;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  padding-top: 20px;
-  padding-bottom: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
   position: relative;
   overflow: hidden;
 
   @media (max-width: 480px) {
     padding: 16px;
-    padding-top: 16px;
-    padding-bottom: 16px;
     align-items: flex-start;
     padding-top: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
   }
 
   &::before {

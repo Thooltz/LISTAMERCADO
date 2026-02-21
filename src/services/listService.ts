@@ -23,6 +23,7 @@ export interface List {
   createdAt: Date
   updatedAt: Date
   itemCount?: number
+  budget?: number | null
 }
 
 /**
@@ -36,6 +37,7 @@ function docToList(docSnap: QueryDocumentSnapshot<DocumentData>): List {
     createdAt: data.createdAt?.toDate() || new Date(),
     updatedAt: data.updatedAt?.toDate() || new Date(),
     itemCount: data.itemCount || 0,
+    budget: data.budget !== undefined ? (data.budget === null ? null : Number(data.budget)) : undefined,
   }
 }
 
@@ -266,5 +268,29 @@ export async function updateItemCount(
   } catch (error: any) {
     console.error('Erro ao atualizar contador:', error)
     // Não lançar erro, é opcional
+  }
+}
+
+/**
+ * Atualiza o orçamento de uma lista
+ */
+export async function updateBudget(
+  uid: string,
+  listId: string,
+  budget: number | null
+): Promise<void> {
+  try {
+    if (!uid || !listId) {
+      throw new Error('UID e listId são obrigatórios')
+    }
+
+    const listRef = doc(db, 'users', uid, 'lists', listId)
+    await updateDoc(listRef, {
+      budget: budget === null ? null : Number(budget),
+      updatedAt: serverTimestamp(),
+    })
+  } catch (error: any) {
+    console.error('Erro ao atualizar orçamento:', error)
+    throw new Error(error.message || 'Erro ao atualizar orçamento')
   }
 }

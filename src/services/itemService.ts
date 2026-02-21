@@ -23,6 +23,7 @@ export interface Item {
   qty: number
   unit?: string
   category?: string
+  price?: number | null
   createdAt: Date
   updatedAt: Date
 }
@@ -39,6 +40,7 @@ function docToItem(docSnap: QueryDocumentSnapshot<DocumentData>): Item {
     qty: data.qty || 1,
     unit: data.unit,
     category: data.category,
+    price: data.price !== undefined ? (data.price === null ? null : Number(data.price)) : undefined,
     createdAt: data.createdAt?.toDate() || new Date(),
     updatedAt: data.updatedAt?.toDate() || new Date(),
   }
@@ -254,6 +256,7 @@ export async function addItem(
     qty?: number
     unit?: string
     category?: string
+    price?: number | null
   }
 ): Promise<Item> {
   try {
@@ -281,6 +284,9 @@ export async function addItem(
     if (item.category) {
       docData.category = item.category
     }
+    if (item.price !== undefined) {
+      docData.price = item.price === null || item.price === 0 ? null : Number(item.price)
+    }
     
     const docRef = await addDoc(itemsRef, docData)
 
@@ -296,6 +302,7 @@ export async function addItem(
       qty: qty,
       unit: item.unit,
       category: item.category,
+      price: item.price !== undefined ? (item.price === null || item.price === 0 ? null : Number(item.price)) : undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -318,6 +325,7 @@ export async function updateItem(
     checked?: boolean
     unit?: string
     category?: string
+    price?: number | null
   }
 ): Promise<void> {
   try {
@@ -335,6 +343,9 @@ export async function updateItem(
     if (updates.checked !== undefined) updateData.checked = updates.checked
     if (updates.unit !== undefined) updateData.unit = updates.unit || null
     if (updates.category !== undefined) updateData.category = updates.category || null
+    if (updates.price !== undefined) {
+      updateData.price = updates.price === null || updates.price === 0 ? null : Number(updates.price)
+    }
 
     await updateDoc(itemRef, updateData)
   } catch (error: any) {

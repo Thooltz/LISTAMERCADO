@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useList } from '../hooks/useList'
 import { useItems } from '../../items/hooks/useItems'
+import { useAuth } from '../../auth/context/AuthProvider'
 import styled from 'styled-components'
 import LoadingSpinner from '../../../shared/components/LoadingSpinner'
 import toast from 'react-hot-toast'
 import { getSuggestion, getDefaultUnit } from '../../../shared/utils/suggestions'
 import ListHeader from '../components/ListHeader'
+import { PriceInput } from '../../../shared/components/PriceInput'
+import { BudgetInput } from '../../../shared/components/BudgetInput'
+import { useDebouncedAutosave } from '../../../shared/hooks/useDebouncedAutosave'
+import { updateBudget } from '../../../services/listService'
+import { parseBRMoneyToNumber } from '../../../shared/utils/money'
 
 const Container = styled.div`
   min-height: 100vh;
@@ -49,17 +55,17 @@ const Container = styled.div`
   }
 `
 
-const Content = styled.div`
+const Content = styled.div<{ hasFooter?: boolean }>`
   max-width: 600px;
   margin: 0 auto;
   padding: 16px;
-  padding-bottom: 16px;
+  padding-bottom: ${props => props.hasFooter ? '120px' : '16px'};
   position: relative;
   z-index: 1;
 
   @media (max-width: 480px) {
     padding: 12px;
-    padding-bottom: 12px;
+    padding-bottom: ${props => props.hasFooter ? '140px' : '12px'};
   }
 `
 
@@ -355,6 +361,7 @@ const QtyAndUnitContainer = styled.div`
   }
 `
 
+
 const ItemActions = styled.div`
   display: flex;
   gap: 8px;
@@ -447,6 +454,62 @@ const ErrorTitle = styled.h2`
   font-size: 1.3rem;
   margin-bottom: 12px;
   font-weight: 600;
+`
+
+const TotalFooter = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 20px;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-width: 600px;
+  margin: 0 auto;
+
+  @media (max-width: 480px) {
+    padding: 18px 16px;
+  }
+`
+
+const TotalContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
+const TotalRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
+
+const TotalLabel = styled.span`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #666;
+`
+
+const TotalValue = styled.span<{ $isExceeded?: boolean }>`
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: ${props => props.$isExceeded 
+    ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`
+
+
+const RemainingValue = styled.span<{ $isExceeded: boolean }>`
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: ${props => props.$isExceeded ? '#ef4444' : '#10b981'};
 `
 
 // Modal
@@ -680,7 +743,19 @@ function ListDetailPage() {
   const [itemQty, setItemQty] = useState('1')
   const [itemUnit, setItemUnit] = useState('un')
   const [itemCategory, setItemCategory] = useState('')
+  const [itemPrice, setItemPrice] = useState<number | null>(null)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
+  
+  // Estados para orçamento com autosave
+  const [budgetRaw, setBudgetRaw] = useState<string>('')
+  const lastSavedBudgetRef = useRef<string>('')
+  const isEditingBudgetRef = useRef(false)
+  
+  // Estados para preços dos itens com autosave (mapa de itemId -> rawValue)
+  const [itemPricesRaw, setItemPricesRaw] = useState<Record<string, string>>({})
+  const lastSavedPricesRef = useRef<Record<string, string>>({})
+  
+  const { user } = useAuth()
 
   // Sugestões automáticas quando o nome do item muda
   useEffect(() => {
@@ -699,6 +774,94 @@ function ListDetailPage() {
   useEffect(() => {
     setItems(fetchedItems)
   }, [fetchedItems])
+
+  // Sincronizar budget da lista (BLOQUEADO durante edição)
+  useEffect(() => {
+    // NUNCA sobrescrever enquanto o usuário está editando
+    if (isEditingBudgetRef.current) {
+      return
+    }
+
+    if (list?.budget !== undefined) {
+      const budgetValue = list.budget
+      if (budgetValue !== null && !isNaN(budgetValue)) {
+        const formatted = budgetValue.toFixed(2).replace('.', ',')
+        // Só atualiza se for diferente do que já está salvo
+        if (formatted !== lastSavedBudgetRef.current) {
+          setBudgetRaw(formatted)
+          lastSavedBudgetRef.current = formatted
+        }
+      } else {
+        // Só limpa se não estiver editando e o valor salvo não for vazio
+        if (lastSavedBudgetRef.current !== '') {
+          setBudgetRaw('')
+          lastSavedBudgetRef.current = ''
+        }
+      }
+    }
+  }, [list?.budget])
+
+  // Função para salvar orçamento
+  const handleSaveBudget = useCallback(async (rawValue: string) => {
+    if (!listId || !user?.uid) return
+    
+    // Se o valor não mudou, não salva
+    if (rawValue === lastSavedBudgetRef.current) {
+      return
+    }
+
+    const numValue = parseBRMoneyToNumber(rawValue)
+    
+    try {
+      await updateBudget(user.uid, listId, numValue)
+      lastSavedBudgetRef.current = rawValue
+    } catch (error: any) {
+      console.error('Erro ao salvar orçamento:', error)
+      toast.error('Erro ao salvar orçamento')
+    }
+  }, [listId, user?.uid])
+
+  // Autosave do orçamento com debounce de 2s
+  useDebouncedAutosave(budgetRaw, handleSaveBudget, 2000, !!listId && !!user?.uid)
+
+  // Função para salvar preço de item
+  const handleSaveItemPrice = useCallback(async (itemId: string, rawValue: string) => {
+    if (!listId || !user?.uid) return
+    
+    // Se o valor não mudou, não salva
+    if (rawValue === lastSavedPricesRef.current[itemId]) {
+      return
+    }
+
+    const numValue = parseBRMoneyToNumber(rawValue)
+    
+    try {
+      await updateItem({
+        id: itemId,
+        updates: { price: numValue },
+      })
+      lastSavedPricesRef.current[itemId] = rawValue
+    } catch (error: any) {
+      console.error('Erro ao salvar preço:', error)
+      toast.error('Erro ao salvar preço')
+    }
+  }, [listId, user?.uid, updateItem])
+
+  // Autosave dos preços dos itens (cada item tem seu próprio debounce)
+  useEffect(() => {
+    const timeouts: NodeJS.Timeout[] = []
+    
+    Object.entries(itemPricesRaw).forEach(([itemId, rawValue]) => {
+      const timeoutId = setTimeout(() => {
+        handleSaveItemPrice(itemId, rawValue)
+      }, 2000)
+      timeouts.push(timeoutId)
+    })
+
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout))
+    }
+  }, [itemPricesRaw, handleSaveItemPrice])
 
   const toggleItem = async (id: string) => {
     console.log('✅ toggleItem CHAMADO', id)
@@ -738,7 +901,7 @@ function ListDetailPage() {
   }
 
   const handleAddItem = async () => {
-    console.log('✅ handleAddItem CHAMADO', { itemName, itemQty, itemUnit, itemCategory })
+    console.log('✅ handleAddItem CHAMADO', { itemName, itemQty, itemUnit, itemCategory, itemPrice })
     if (!itemName.trim() || !listId) {
       toast.error('Nome do item é obrigatório')
       return
@@ -750,11 +913,13 @@ function ListDetailPage() {
         qty: itemQty ? parseInt(itemQty) : undefined,
         unit: itemUnit || undefined,
         category: itemCategory || undefined,
+        price: itemPrice,
       })
       setItemName('')
       setItemQty('1')
       setItemUnit('un')
       setItemCategory('')
+      setItemPrice(null)
       setShowAddItemModal(false)
       toast.success('Item adicionado!')
     } catch (error: any) {
@@ -770,6 +935,7 @@ function ListDetailPage() {
     setItemQty(item.qty?.toString() || '1')
     setItemUnit(item.unit || 'un')
     setItemCategory(item.category || '')
+    setItemPrice(item.price !== null && item.price !== undefined ? item.price : null)
     setShowEditItemModal(true)
   }
 
@@ -785,6 +951,7 @@ function ListDetailPage() {
     const optimisticName = itemName.trim()
     const optimisticUnit = itemUnit || undefined
     const optimisticCategory = itemCategory || undefined
+    const optimisticPrice = itemPrice
 
     setItems(prev =>
       prev.map(item =>
@@ -795,11 +962,12 @@ function ListDetailPage() {
               qty: parsedQty ?? item.qty,
               unit: optimisticUnit,
               category: optimisticCategory,
+              price: optimisticPrice,
             }
           : item
       )
     )
-    console.log('edit', editingItemId, { name: optimisticName, qty: parsedQty, unit: optimisticUnit, category: optimisticCategory })
+    console.log('edit', editingItemId, { name: optimisticName, qty: parsedQty, unit: optimisticUnit, category: optimisticCategory, price: optimisticPrice })
 
     try {
       await updateItem({
@@ -809,6 +977,7 @@ function ListDetailPage() {
           qty: parsedQty,
           unit: optimisticUnit,
           category: optimisticCategory,
+          price: optimisticPrice,
         },
       })
       setShowEditItemModal(false)
@@ -817,6 +986,7 @@ function ListDetailPage() {
       setItemQty('1')
       setItemUnit('un')
       setItemCategory('')
+      setItemPrice(null)
       toast.success('Item atualizado!')
     } catch (error: any) {
       console.error('Erro ao atualizar item:', error)
@@ -852,6 +1022,22 @@ function ListDetailPage() {
   const totalItems = items.length
   const checkedItems = items.filter(item => item.checked).length
   const uncheckedItems = totalItems - checkedItems
+
+  // Função para calcular o total dos preços usando reduce
+  const calculateTotal = (): number => {
+    return items.reduce((acc, item) => {
+      const price = item.price
+      if (price !== null && price !== undefined && !isNaN(price) && price > 0) {
+        return acc + price
+      }
+      return acc
+    }, 0)
+  }
+
+  const totalPrice = calculateTotal()
+  const budgetValue = list?.budget ?? null
+  const remaining = budgetValue !== null && !isNaN(budgetValue) ? budgetValue - totalPrice : null
+  const isExceeded = remaining !== null && remaining < 0
 
   if (listLoading || itemsLoading) {
     return <LoadingSpinner />
@@ -913,7 +1099,7 @@ function ListDetailPage() {
           onBack={() => navigate('/lists')}
         />
 
-        <Content>
+        <Content hasFooter={!!(totalItems > 0 || budgetRaw || budgetValue !== null)}>
           <AddButton 
             type="button"
             onClick={(e) => {
@@ -986,6 +1172,30 @@ function ListDetailPage() {
                         )}
                       </QtyAndUnitContainer>
                     )}
+                    <PriceInput
+                      value={item.price}
+                      onChange={(price) => {
+                        // Atualização imediata na UI
+                        setItems(prev =>
+                          prev.map(i =>
+                            i.id === item.id ? { ...i, price } : i
+                          )
+                        )
+                        // Autosave será feito pelo debounce
+                      }}
+                      onRawChange={(rawValue) => {
+                        // Atualiza o estado raw para o debounce
+                        setItemPricesRaw(prev => ({
+                          ...prev,
+                          [item.id]: rawValue,
+                        }))
+                      }}
+                      placeholder="0,00"
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      style={{ marginLeft: '8px' }}
+                    />
                   </ItemContent>
                   <ItemActions>
                     <ActionButton 
@@ -1042,6 +1252,52 @@ function ListDetailPage() {
             )}
           </ItemsList>
         </Content>
+
+        {/* Rodapé fixo com Total */}
+        {(totalItems > 0 || budgetRaw || budgetValue !== null) && (
+          <TotalFooter>
+            <TotalContent>
+              {budgetValue !== null && !isNaN(budgetValue) && (
+                <TotalRow>
+                  <TotalLabel>🧮 Orçamento:</TotalLabel>
+                  <TotalValue>
+                    {budgetValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </TotalValue>
+                </TotalRow>
+              )}
+              <TotalRow>
+                <TotalLabel>💰 Total da compra:</TotalLabel>
+                <TotalValue $isExceeded={isExceeded}>
+                  {totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </TotalValue>
+              </TotalRow>
+              {budgetValue !== null && remaining !== null && (
+                <TotalRow>
+                  <TotalLabel>💸 Restante:</TotalLabel>
+                  <RemainingValue $isExceeded={isExceeded}>
+                    {remaining.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    {isExceeded && ' ⚠️ Orçamento excedido'}
+                  </RemainingValue>
+                </TotalRow>
+              )}
+              <TotalRow style={{ marginTop: budgetValue !== null ? '8px' : '0' }}>
+                <BudgetInput
+                  value={list?.budget ?? null}
+                  onChange={() => {
+                    // onChange será chamado no onBlur, mas o autosave usa rawValue
+                  }}
+                  onRawChange={(rawValue) => {
+                    setBudgetRaw(rawValue)
+                  }}
+                  onEditingChange={(isEditing) => {
+                    isEditingBudgetRef.current = isEditing
+                  }}
+                  placeholder={budgetValue !== null ? "Editar orçamento" : "Quanto você tem para gastar? (opcional)"}
+                />
+              </TotalRow>
+            </TotalContent>
+          </TotalFooter>
+        )}
       </Container>
 
       {/* Modal Adicionar Item */}
@@ -1060,6 +1316,7 @@ function ListDetailPage() {
               setItemQty('1')
               setItemUnit('un')
               setItemCategory('')
+              setItemPrice(null)
             }}
           >✕</CloseButton>
         </ModalHeader>
@@ -1115,6 +1372,15 @@ function ListDetailPage() {
           </Select>
         </FormGroup>
 
+        <FormGroup>
+          <Label>Preço (opcional)</Label>
+          <PriceInput
+            value={itemPrice}
+            onChange={(price) => setItemPrice(price)}
+            placeholder="Ex: 12,50"
+          />
+        </FormGroup>
+
         <ModalActions>
           <Button 
             type="button"
@@ -1127,6 +1393,7 @@ function ListDetailPage() {
               setItemQty('1')
               setItemUnit('un')
               setItemCategory('')
+              setItemPrice(null)
             }}
           >
             Cancelar
@@ -1164,6 +1431,7 @@ function ListDetailPage() {
               setItemQty('1')
               setItemUnit('un')
               setItemCategory('')
+              setItemPrice(null)
             }}
           >✕</CloseButton>
         </ModalHeader>
@@ -1205,6 +1473,15 @@ function ListDetailPage() {
           </Select>
         </FormGroup>
 
+        <FormGroup>
+          <Label>Preço (opcional)</Label>
+          <PriceInput
+            value={itemPrice}
+            onChange={(price) => setItemPrice(price)}
+            placeholder="Ex: 12,50"
+          />
+        </FormGroup>
+
         <ModalActions>
           <Button 
             type="button"
@@ -1218,6 +1495,7 @@ function ListDetailPage() {
               setItemQty('1')
               setItemUnit('un')
               setItemCategory('')
+              setItemPrice(null)
             }}
           >
             Cancelar
