@@ -13,26 +13,16 @@ const Container = styled.div`
   justify-content: center;
   padding: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow-y: auto;
+  position: relative;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
 
   @media (max-width: 480px) {
     padding: 16px;
     align-items: flex-start;
-    padding-top: 40px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
 
   &::before {
@@ -44,6 +34,8 @@ const Container = styled.div`
     height: 200%;
     background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
     animation: pulse 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
   }
 
   &::after {
@@ -55,6 +47,8 @@ const Container = styled.div`
     height: 150%;
     background: radial-gradient(circle, rgba(118, 75, 162, 0.2) 0%, transparent 70%);
     animation: pulse 25s ease-in-out infinite reverse;
+    pointer-events: none;
+    z-index: 0;
   }
 
   @keyframes pulse {
@@ -76,23 +70,34 @@ const Card = styled.div`
   z-index: 1;
   animation: scaleIn 0.5s ease-out;
   border: 1px solid rgba(255, 255, 255, 0.3);
+  box-sizing: border-box;
 
   @media (max-width: 480px) {
-    padding: 32px 20px;
-    border-radius: 24px;
+    padding: 24px 20px;
+    border-radius: 20px;
     max-width: 100%;
     margin: 0;
+    width: 100%;
   }
 `
 
 const Logo = styled.div`
   text-align: center;
   margin-bottom: 32px;
+
+  @media (max-width: 480px) {
+    margin-bottom: 24px;
+  }
 `
 
 const LogoIcon = styled.div`
   font-size: 3rem;
   margin-bottom: 12px;
+
+  @media (max-width: 480px) {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
 `
 
 const LogoTitle = styled.h1`
@@ -104,12 +109,21 @@ const LogoTitle = styled.h1`
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
+  @media (max-width: 480px) {
+    font-size: 1.75rem;
+  }
 `
 
 const LogoSubtitle = styled.p`
   font-size: 0.95rem;
   color: #666;
   margin-top: 8px;
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    margin-top: 6px;
+  }
 `
 
 const Tabs = styled.div`
@@ -121,6 +135,12 @@ const Tabs = styled.div`
   padding: 6px;
   border-radius: 16px;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 480px) {
+    margin-bottom: 24px;
+    padding: 5px;
+    gap: 6px;
+  }
 `
 
 const Tab = styled.button<{ $active: boolean }>`
@@ -146,6 +166,10 @@ const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  @media (max-width: 480px) {
+    gap: 18px;
+  }
 `
 
 const InputGroup = styled.div`
@@ -174,6 +198,7 @@ const Input = styled.input`
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   min-height: 56px;
+  box-sizing: border-box;
 
   &:focus {
     border-color: #667eea;
@@ -188,9 +213,10 @@ const Input = styled.input`
   }
 
   @media (max-width: 480px) {
-    padding: 20px;
-    min-height: 60px;
+    padding: 16px;
+    min-height: 56px;
     border-radius: 14px;
+    font-size: 16px;
   }
 `
 
@@ -212,11 +238,12 @@ const Button = styled.button<{ $loading?: boolean }>`
   position: relative;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
 
   @media (max-width: 480px) {
-    padding: 20px;
-    font-size: 1.1rem;
-    min-height: 60px;
+    padding: 16px;
+    font-size: 1rem;
+    min-height: 56px;
     border-radius: 14px;
   }
 
