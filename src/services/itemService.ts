@@ -59,7 +59,7 @@ export function subscribeItems(
     throw new Error('UID e listId são obrigatórios')
   }
 
-  const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+  const itemsRef = collection(db, 'lists', listId, 'items')
   
   // Função auxiliar para ordenar itens
   const sortItems = (items: Item[]): Item[] => {
@@ -151,7 +151,7 @@ export async function getItems(uid: string, listId: string): Promise<Item[]> {
       throw new Error('UID e listId são obrigatórios')
     }
 
-    const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+    const itemsRef = collection(db, 'lists', listId, 'items')
     // Query simples: apenas ordenar por createdAt (sem índice composto necessário)
     let q = query(itemsRef, orderBy('createdAt', 'desc'))
     
@@ -197,7 +197,7 @@ export async function getItemsPreview(uid: string, listId: string, previewLimit:
       throw new Error('UID e listId são obrigatórios')
     }
 
-    const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+    const itemsRef = collection(db, 'lists', listId, 'items')
     // Query simples: ordenar por createdAt e limitar para performance
     // Não usar orderBy('checked') para evitar necessidade de índice composto
     let q = query(itemsRef, orderBy('createdAt', 'desc'))
@@ -267,7 +267,7 @@ export async function addItem(
       throw new Error('Nome do item é obrigatório')
     }
 
-    const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+    const itemsRef = collection(db, 'lists', listId, 'items')
     const qty = item.qty && item.qty > 0 ? item.qty : 1
     
     const docData: any = {
@@ -333,7 +333,7 @@ export async function updateItem(
       throw new Error('UID, listId e itemId são obrigatórios')
     }
 
-    const itemRef = doc(db, 'users', uid, 'lists', listId, 'items', itemId)
+    const itemRef = doc(db, 'lists', listId, 'items', itemId)
     const updateData: any = {
       updatedAt: serverTimestamp(),
     }
@@ -368,7 +368,7 @@ export async function toggleItem(
       throw new Error('UID, listId e itemId são obrigatórios')
     }
 
-    const itemRef = doc(db, 'users', uid, 'lists', listId, 'items', itemId)
+    const itemRef = doc(db, 'lists', listId, 'items', itemId)
     await updateDoc(itemRef, {
       checked: checked,
       updatedAt: serverTimestamp(),
@@ -392,11 +392,11 @@ export async function deleteItem(
       throw new Error('UID, listId e itemId são obrigatórios')
     }
 
-    const itemRef = doc(db, 'users', uid, 'lists', listId, 'items', itemId)
+    const itemRef = doc(db, 'lists', listId, 'items', itemId)
     await deleteDoc(itemRef)
 
     // Atualizar contador de itens
-    const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+    const itemsRef = collection(db, 'lists', listId, 'items')
     const itemsSnapshot = await getDocs(itemsRef)
     const { updateItemCount } = await import('./listService')
     await updateItemCount(uid, listId, itemsSnapshot.size)

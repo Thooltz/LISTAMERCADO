@@ -1,6 +1,7 @@
 import {
   collection,
   query,
+  where,
   orderBy,
   getDocs,
   getDoc,
@@ -15,7 +16,7 @@ import {
   DocumentData,
   Unsubscribe,
 } from 'firebase/firestore'
-import { db } from '../firebase'
+import { db, auth } from '../firebase'
 
 export interface List {
   id: string
@@ -52,8 +53,12 @@ export function subscribeLists(
     throw new Error('UID do usuário é obrigatório')
   }
 
-  const listsRef = collection(db, 'users', uid, 'lists')
-  const q = query(listsRef, orderBy('updatedAt', 'desc'))
+  const listsRef = collection(db, 'lists')
+  const q = query(
+    listsRef,
+    where('userId', '==', uid),
+    orderBy('updatedAt', 'desc')
+  )
 
   return onSnapshot(
     q,
@@ -81,13 +86,19 @@ export function subscribeToList(
     throw new Error('UID e listId são obrigatórios')
   }
 
-  const listRef = doc(db, 'users', uid, 'lists', listId)
+  const listRef = doc(db, 'lists', listId)
 
   return onSnapshot(
     listRef,
     (docSnap) => {
       if (docSnap.exists()) {
-        callback(docToList(docSnap as QueryDocumentSnapshot<DocumentData>))
+        const data = docSnap.data()
+        // Verificar se a lista pertence ao usuário
+        if (data.userId === uid) {
+          callback(docToList(docSnap as QueryDocumentSnapshot<DocumentData>))
+        } else {
+          callback(null)
+        }
       } else {
         callback(null)
       }
@@ -111,11 +122,15 @@ export async function getList(uid: string, listId: string): Promise<List | null>
       throw new Error('UID e listId são obrigatórios')
     }
 
-    const listRef = doc(db, 'users', uid, 'lists', listId)
+    const listRef = doc(db, 'lists', listId)
     const docSnap = await getDoc(listRef)
 
     if (docSnap.exists()) {
-      return docToList(docSnap as QueryDocumentSnapshot<DocumentData>)
+      const data = docSnap.data()
+      // Verificar se a lista pertence ao usuário
+      if (data.userId === uid) {
+        return docToList(docSnap as QueryDocumentSnapshot<DocumentData>)
+      }
     }
     return null
   } catch (error: any) {
@@ -133,8 +148,12 @@ export async function getLists(uid: string): Promise<List[]> {
       throw new Error('UID do usuário é obrigatório')
     }
 
-    const listsRef = collection(db, 'users', uid, 'lists')
-    const q = query(listsRef, orderBy('updatedAt', 'desc'))
+    const listsRef = collection(db, 'lists')
+    const q = query(
+      listsRef,
+      where('userId', '==', uid),
+      orderBy('updatedAt', 'desc')
+    )
     const querySnapshot = await getDocs(q)
 
     return querySnapshot.docs.map(docToList)
@@ -146,32 +165,50 @@ export async function getLists(uid: string): Promise<List[]> {
 
 /**
  * Cria uma nova lista
+ * Verifica autenticação diretamente e inclui userId no documento
  */
 export async function createList(uid: string, name: string): Promise<List> {
   try {
-    if (!uid) {
-      throw new Error('UID do usuário é obrigatório')
+    // Verificar autenticação diretamente
+    const user = auth.currentUser
+
+    if (!user?.uid) {
+      console.error('❌ Usuário não autenticado ao criar lista')
+      throw new Error('Você precisa estar logado para criar uma lista.')
     }
+
+    // Validar que o uid passado corresponde ao usuário autenticado
+    if (uid !== user.uid) {
+      console.error('❌ UID não corresponde ao usuário autenticado', { uid, authUid: user.uid })
+      throw new Error('Erro de autenticação. Faça login novamente.')
+    }
+
     if (!name || !name.trim()) {
       throw new Error('Nome da lista é obrigatório')
     }
 
-    const listsRef = collection(db, 'users', uid, 'lists')
-    const docRef = await addDoc(listsRef, {
+    const payload = {
       name: name.trim(),
+      userId: user.uid, // OBRIGATÓRIO: userId deve ser salvo no documento
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       itemCount: 0,
-    })
+    }
+
+    console.log('✅ Criando lista com uid:', user.uid)
+    console.log('📦 Payload:', { ...payload, createdAt: '[serverTimestamp]', updatedAt: '[serverTimestamp]' })
+    console.log('📍 Path: lists/')
+
+    const listsRef = collection(db, 'lists')
+    const docRef = await addDoc(listsRef, payload)
+
+    console.log('✅ Lista criada com sucesso! ID:', docRef.id)
 
     // Buscar o documento criado
-    const docSnap = await getDocs(
-      query(listsRef, orderBy('updatedAt', 'desc'))
-    )
-    const createdList = docSnap.docs.find((d) => d.id === docRef.id)
+    const docSnap = await getDoc(docRef)
 
-    if (createdList) {
-      return docToList(createdList)
+    if (docSnap.exists()) {
+      return docToList(docSnap as QueryDocumentSnapshot<DocumentData>)
     }
 
     // Fallback se não encontrar
@@ -183,7 +220,9 @@ export async function createList(uid: string, name: string): Promise<List> {
       itemCount: 0,
     }
   } catch (error: any) {
-    console.error('Erro ao criar lista:', error)
+    console.error('❌ Erro ao criar lista:', error)
+    console.error('❌ Código do erro:', error.code)
+    console.error('❌ Mensagem do erro:', error.message)
     throw new Error(error.message || 'Erro ao criar lista')
   }
 }
@@ -207,7 +246,7 @@ export async function renameList(
       throw new Error('Nome da lista é obrigatório')
     }
 
-    const listRef = doc(db, 'users', uid, 'lists', listId)
+    const listRef = doc(db, 'lists', listId)
     await updateDoc(listRef, {
       name: name.trim(),
       updatedAt: serverTimestamp(),
@@ -231,17 +270,17 @@ export async function deleteList(uid: string, listId: string): Promise<void> {
     }
 
     // Deletar todos os itens da lista primeiro
-    const itemsRef = collection(db, 'users', uid, 'lists', listId, 'items')
+    const itemsRef = collection(db, 'lists', listId, 'items')
     const itemsSnapshot = await getDocs(itemsRef)
     
     const deletePromises = itemsSnapshot.docs.map((itemDoc) =>
-      deleteDoc(doc(db, 'users', uid, 'lists', listId, 'items', itemDoc.id))
+      deleteDoc(doc(db, 'lists', listId, 'items', itemDoc.id))
     )
     
     await Promise.all(deletePromises)
 
     // Deletar a lista
-    const listRef = doc(db, 'users', uid, 'lists', listId)
+    const listRef = doc(db, 'lists', listId)
     await deleteDoc(listRef)
   } catch (error: any) {
     console.error('Erro ao deletar lista:', error)
@@ -260,7 +299,7 @@ export async function updateItemCount(
   try {
     if (!uid || !listId) return
 
-    const listRef = doc(db, 'users', uid, 'lists', listId)
+    const listRef = doc(db, 'lists', listId)
     await updateDoc(listRef, {
       itemCount: count,
       updatedAt: serverTimestamp(),
@@ -284,7 +323,7 @@ export async function updateBudget(
       throw new Error('UID e listId são obrigatórios')
     }
 
-    const listRef = doc(db, 'users', uid, 'lists', listId)
+    const listRef = doc(db, 'lists', listId)
     await updateDoc(listRef, {
       budget: budget === null ? null : Number(budget),
       updatedAt: serverTimestamp(),

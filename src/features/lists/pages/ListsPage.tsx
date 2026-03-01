@@ -521,7 +521,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
 `
 
 function ListsPage() {
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const { lists, isLoading, createList, renameList, deleteList, isCreating, isDeleting } = useLists()
   const navigate = useNavigate()
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -545,12 +545,23 @@ function ListsPage() {
 
   const handleCreateList = async () => {
     console.log('✅ handleCreateList CHAMADO', listName)
+    
+    // Validar se o usuário está logado
+    if (!user?.uid) {
+      console.error('❌ handleCreateList CANCELADO - usuário não autenticado')
+      toast.error('Você precisa estar logado para criar uma lista.')
+      return
+    }
+
+    // Validar se o nome não está vazio
     if (!listName.trim()) {
       console.log('❌ handleCreateList CANCELADO - nome vazio')
+      toast.error('O nome da lista é obrigatório.')
       return
     }
 
     try {
+      console.log('✅ Usuário autenticado, criando lista...', { uid: user.uid, name: listName.trim() })
       const newList = await createList(listName.trim())
       setListName('')
       setShowCreateModal(false)
@@ -559,8 +570,10 @@ function ListsPage() {
       if (newList?.id) {
         navigate(`/lists/${newList.id}`)
       }
-    } catch (error) {
-      console.error('Erro ao criar lista:', error)
+    } catch (error: any) {
+      console.error('❌ Erro ao criar lista:', error)
+      const errorMessage = error?.message || 'Erro ao criar lista. Tente novamente.'
+      toast.error(errorMessage)
     }
   }
 
