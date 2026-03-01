@@ -41,27 +41,27 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             toastOptions={{
               duration: 3000,
               style: {
-                background: 'rgba(26, 26, 26, 0.95)',
+                background: 'rgba(17, 24, 39, 0.95)',
                 backdropFilter: 'blur(20px) saturate(180%)',
                 WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                color: '#fff',
+                color: '#F9FAFB',
                 borderRadius: '16px',
                 padding: '16px 20px',
                 fontSize: '15px',
                 fontWeight: '600',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+                border: '1px solid rgba(30, 41, 59, 0.5)',
                 maxWidth: '90vw',
                 margin: '0 auto',
               },
               success: {
                 duration: 2000,
                 iconTheme: {
-                  primary: '#10b981',
+                  primary: '#22C55E',
                   secondary: '#fff',
                 },
                 style: {
-                  background: 'rgba(16, 185, 129, 0.95)',
+                  background: 'rgba(34, 197, 94, 0.95)',
                   backdropFilter: 'blur(20px) saturate(180%)',
                   WebkitBackdropFilter: 'blur(20px) saturate(180%)',
                 },
@@ -69,7 +69,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               error: {
                 duration: 4000,
                 iconTheme: {
-                  primary: '#ef4444',
+                  primary: '#EF4444',
                   secondary: '#fff',
                 },
                 style: {

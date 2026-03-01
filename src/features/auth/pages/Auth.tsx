@@ -12,15 +12,23 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-bg);
+  background-image: var(--color-bg-gradient-vibrant);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
   position: relative;
   overflow-x: hidden;
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
 
   @media (max-width: 480px) {
     padding: 16px;
     align-items: flex-start;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-top: max(20px, env(safe-area-inset-top, 20px));
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
     min-height: 100vh;
     min-height: -webkit-fill-available;
   }
@@ -32,7 +40,7 @@ const Container = styled.div`
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%);
     animation: pulse 20s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;
@@ -45,7 +53,7 @@ const Container = styled.div`
     left: -30%;
     width: 150%;
     height: 150%;
-    background: radial-gradient(circle, rgba(118, 75, 162, 0.2) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.08) 0%, transparent 70%);
     animation: pulse 25s ease-in-out infinite reverse;
     pointer-events: none;
     z-index: 0;
@@ -60,24 +68,25 @@ const Container = styled.div`
 const Card = styled.div`
   width: 100%;
   max-width: 440px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  background: var(--color-surface);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   border-radius: 32px;
   padding: 48px;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-2xl), 0 0 0 1px var(--color-border);
   position: relative;
   z-index: 1;
   animation: scaleIn 0.5s ease-out;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border);
   box-sizing: border-box;
 
   @media (max-width: 480px) {
-    padding: 24px 20px;
-    border-radius: 20px;
+    padding: 32px 24px;
+    border-radius: 24px;
     max-width: 100%;
     margin: 0;
     width: 100%;
+    box-shadow: var(--shadow-2xl), 0 0 0 1px var(--color-border);
   }
 `
 
@@ -103,9 +112,9 @@ const LogoIcon = styled.div`
 const LogoTitle = styled.h1`
   font-size: 2rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--color-text);
   margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -117,7 +126,7 @@ const LogoTitle = styled.h1`
 
 const LogoSubtitle = styled.p`
   font-size: 0.95rem;
-  color: #666;
+  color: var(--color-text-secondary);
   margin-top: 8px;
 
   @media (max-width: 480px) {
@@ -130,11 +139,12 @@ const Tabs = styled.div`
   display: flex;
   gap: 8px;
   margin-bottom: 32px;
-  background: rgba(245, 245, 245, 0.8);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
   padding: 6px;
   border-radius: 16px;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
 
   @media (max-width: 480px) {
     margin-bottom: 24px;
@@ -146,16 +156,20 @@ const Tabs = styled.div`
 const Tab = styled.button<{ $active: boolean }>`
   flex: 1;
   padding: 14px;
-  background: ${props => props.$active ? 'white' : 'transparent'};
+  background: ${props => props.$active ? 'var(--color-primary-gradient)' : 'transparent'};
   border: none;
   font-size: 1rem;
   font-weight: ${props => (props.$active ? '700' : '500')};
-  color: ${props => (props.$active ? '#667eea' : '#999')};
+  color: ${props => (props.$active ? 'white' : 'var(--color-text-secondary)')};
   border-radius: 12px;
   transition: all var(--transition-base);
   cursor: pointer;
-  box-shadow: ${props => props.$active ? '0 4px 12px rgba(102, 126, 234, 0.25)' : 'none'};
+  box-shadow: ${props => props.$active ? 'var(--shadow-colored)' : 'none'};
   position: relative;
+
+  &:hover:not(:disabled) {
+    ${props => !props.$active && 'color: var(--color-text);'}
+  }
 
   &:active {
     transform: scale(0.96);
@@ -181,49 +195,50 @@ const InputGroup = styled.div`
 const Label = styled.label`
   font-size: 0.9rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--color-text);
 `
 
 const Input = styled.input`
   width: 100%;
   padding: 18px;
-  border: 2px solid rgba(224, 224, 224, 0.5);
+  border: 2px solid var(--color-border);
   border-radius: 16px;
   font-size: 16px;
   transition: all var(--transition-base);
-  background: rgba(250, 250, 250, 0.8);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  color: #1a1a1a;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   min-height: 56px;
   box-sizing: border-box;
 
   &:focus {
-    border-color: #667eea;
+    border-color: var(--color-primary);
     outline: none;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.2);
+    background: var(--color-bg-tertiary);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15), 0 4px 12px rgba(34, 197, 94, 0.2);
     transform: translateY(-1px);
   }
 
   &::placeholder {
-    color: #999;
+    color: var(--color-text-secondary);
   }
 
   @media (max-width: 480px) {
-    padding: 16px;
-    min-height: 56px;
-    border-radius: 14px;
+    padding: 18px;
+    min-height: 60px;
+    border-radius: 16px;
     font-size: 16px;
+    border-width: 2.5px;
   }
 `
 
 const Button = styled.button<{ $loading?: boolean }>`
   width: 100%;
   padding: 18px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary-gradient);
   color: white;
   font-size: 1.05rem;
   font-weight: 700;
@@ -232,19 +247,27 @@ const Button = styled.button<{ $loading?: boolean }>`
   transition: all var(--transition-bounce);
   cursor: ${props => (props.$loading ? 'not-allowed' : 'pointer')};
   opacity: ${props => (props.$loading ? 0.7 : 1)};
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0);
+  box-shadow: var(--shadow-colored);
   min-height: 56px;
   letter-spacing: 0.3px;
   position: relative;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   box-sizing: border-box;
+  touch-action: manipulation;
 
   @media (max-width: 480px) {
-    padding: 16px;
-    font-size: 1rem;
-    min-height: 56px;
-    border-radius: 14px;
+    padding: 20px;
+    font-size: 1.1rem;
+    min-height: 60px;
+    border-radius: 18px;
+    box-shadow: var(--shadow-colored-lg);
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary-gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-colored-lg);
   }
 
   &::before {
@@ -261,8 +284,9 @@ const Button = styled.button<{ $loading?: boolean }>`
   }
 
   &:active:not(:disabled) {
-    transform: scale(0.95);
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5), 0 0 0 4px rgba(102, 126, 234, 0.2);
+    background: var(--color-primary-dark);
+    transform: scale(0.96) translateY(0);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.5), 0 0 0 4px rgba(34, 197, 94, 0.2);
     
     &::before {
       width: 400px;
@@ -277,11 +301,11 @@ const Button = styled.button<{ $loading?: boolean }>`
 
 const ErrorMessage = styled.div`
   padding: 12px 16px;
-  background: #fee;
-  color: #e74c3c;
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
   border-radius: 12px;
   font-size: 0.9rem;
-  border: 1px solid #fcc;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 `
 
 function Auth() {

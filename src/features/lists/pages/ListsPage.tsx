@@ -9,10 +9,19 @@ import toast from 'react-hot-toast'
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 50%, #f8f9fa 100%);
-  padding-bottom: 20px;
+  min-height: -webkit-fill-available;
+  background: var(--color-bg);
+  background-image: var(--color-bg-gradient-vibrant);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
   position: relative;
   overflow-x: hidden;
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
 
   &::before {
     content: '';
@@ -21,10 +30,11 @@ const Container = styled.div`
     right: -20%;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
     animation: float 20s ease-in-out infinite;
+    z-index: 0;
   }
 
   &::after {
@@ -34,33 +44,41 @@ const Container = styled.div`
     left: -10%;
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, rgba(118, 75, 162, 0.06) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.06) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
     animation: float 25s ease-in-out infinite reverse;
+    z-index: 0;
   }
 
   @keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(30px, -30px) scale(1.1); }
+    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { transform: translate(30px, -30px) scale(1.1) rotate(5deg); }
+  }
+
+  @media (max-width: 480px) {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
   }
 `
 
 const Header = styled.header`
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: var(--color-surface);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
   padding: 24px 20px;
-  padding-top: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: max(24px, env(safe-area-inset-top, 24px));
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-glass);
+  transition: all var(--transition-smooth);
 
   @media (max-width: 480px) {
     padding: 20px 16px;
-    padding-top: 20px;
+    padding-top: max(20px, env(safe-area-inset-top, 20px));
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
   }
 `
 
@@ -76,7 +94,7 @@ const HeaderContent = styled.div`
 const Title = styled.h1`
   font-size: 1.75rem;
   font-weight: 800;
-  color: #1a1a1a;
+  color: var(--color-text);
   margin: 0;
   flex: 1;
   letter-spacing: -0.5px;
@@ -89,7 +107,7 @@ const HeaderActions = styled.div`
 `
 
 const AddButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary-gradient);
   color: white;
   border: none;
   border-radius: 16px;
@@ -97,8 +115,8 @@ const AddButton = styled.button`
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: var(--shadow-colored);
+  transition: all var(--transition-bounce);
   min-height: 52px;
   letter-spacing: 0.5px;
   position: relative;
@@ -106,12 +124,14 @@ const AddButton = styled.button`
   -webkit-tap-highlight-color: transparent;
   pointer-events: auto;
   z-index: 10;
+  touch-action: manipulation;
 
   @media (max-width: 480px) {
-    padding: 16px 20px;
-    font-size: 1.05rem;
-    min-height: 56px;
-    border-radius: 14px;
+    padding: 18px 24px;
+    font-size: 1.1rem;
+    min-height: 60px;
+    border-radius: 18px;
+    box-shadow: var(--shadow-colored-lg);
   }
 
   &::before {
@@ -127,9 +147,16 @@ const AddButton = styled.button`
     transition: width 0.6s, height 0.6s;
   }
 
+  &:hover {
+    background: var(--color-primary-gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-colored-lg);
+  }
+
   &:active {
-    transform: scale(0.95);
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5), 0 0 0 4px rgba(102, 126, 234, 0.2);
+    background: var(--color-primary-dark);
+    transform: scale(0.96) translateY(0);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.5), 0 0 0 4px rgba(34, 197, 94, 0.2);
     
     &::before {
       width: 300px;
@@ -145,30 +172,35 @@ const AddButton = styled.button`
 `
 
 const LogoutButton = styled.button`
-  background: rgba(245, 245, 245, 0.8);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 12px;
   font-size: 1.3rem;
   cursor: pointer;
-  color: #666;
+  color: var(--color-text-secondary);
   min-width: 48px;
   min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   pointer-events: auto;
   position: relative;
   z-index: 10;
 
+  &:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
+  }
+
   &:active {
-    background: rgba(231, 76, 60, 0.1);
+    background: rgba(239, 68, 68, 0.2);
     transform: scale(0.92) rotate(5deg);
-    color: #e74c3c;
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+    color: var(--color-danger);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
   }
 `
 
@@ -193,18 +225,26 @@ const ListsContainer = styled.div`
 `
 
 const ListCard = styled.div`
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: var(--color-surface);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
   border-radius: 24px;
   padding: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-glass);
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all var(--transition-slow);
+  border: 1px solid var(--color-border);
   position: relative;
   overflow: visible;
   pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+
+  @media (max-width: 480px) {
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass-strong);
+  }
 
   &::before {
     content: '';
@@ -213,7 +253,7 @@ const ListCard = styled.div`
     left: 0;
     right: 0;
     height: 5px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: var(--color-primary-gradient);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -228,16 +268,22 @@ const ListCard = styled.div`
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%);
     opacity: 0;
     transition: opacity 0.4s;
     pointer-events: none;
     z-index: 1;
   }
 
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-colored-lg), 0 0 0 1px var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
   &:active {
-    transform: scale(0.97) translateY(4px);
-    box-shadow: 0 4px 24px rgba(102, 126, 234, 0.2), 0 0 0 1px rgba(102, 126, 234, 0.1);
+    transform: scale(0.98) translateY(2px);
+    box-shadow: var(--shadow-colored), 0 0 0 1px var(--color-primary);
     
     &::before {
       transform: scaleX(1);
@@ -259,15 +305,11 @@ const ListHeader = styled.div`
 const ListTitle = styled.h3`
   font-size: 1.2rem;
   font-weight: 800;
-  color: #1a1a1a;
+  color: var(--color-text);
   flex: 1;
   margin: 0;
   line-height: 1.5;
   letter-spacing: -0.4px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 `
 
 const ListActions = styled.div`
@@ -277,12 +319,12 @@ const ListActions = styled.div`
 `
 
 const IconButton = styled.button`
-  background: rgba(248, 249, 250, 0.8);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border);
   font-size: 1.2rem;
   cursor: pointer;
-  color: #666;
+  color: var(--color-text-secondary);
   padding: 12px;
   min-width: 44px;
   min-height: 44px;
@@ -291,22 +333,27 @@ const IconButton = styled.button`
   justify-content: center;
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   pointer-events: auto;
   position: relative;
   z-index: 10;
 
+  &:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
+  }
+
   &:active {
-    background: rgba(233, 236, 239, 0.9);
+    background: var(--color-bg-tertiary);
     transform: scale(0.9) rotate(5deg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 
   &.danger:active {
-    color: #e74c3c;
-    background: rgba(254, 238, 238, 0.9);
+    color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.2);
     transform: scale(0.9) rotate(-5deg);
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
   }
 `
 
@@ -318,7 +365,7 @@ const ItemsPreview = styled.div`
 
 const PreviewItem = styled.div`
   font-size: 1rem;
-  color: #555;
+  color: var(--color-text-secondary);
   margin-bottom: 10px;
   line-height: 1.6;
   font-weight: 600;
@@ -330,34 +377,35 @@ const PreviewItem = styled.div`
   }
 
   &:hover {
-    color: #667eea;
+    color: var(--color-primary);
     transform: translateX(4px);
   }
 `
 
 const PreviewMore = styled.div`
   font-size: 0.95rem;
-  color: #999;
+  color: var(--color-text-secondary);
   font-style: italic;
   margin-top: 10px;
   font-weight: 600;
   letter-spacing: 0.3px;
+  opacity: 0.7;
 `
 
 const EmptyState = styled.div`
   text-align: center;
   padding: 100px 20px;
-  color: #999;
+  color: var(--color-text-secondary);
   position: relative;
 `
 
 const EmptyTitle = styled.h2`
   font-size: 1.75rem;
   margin-bottom: 20px;
-  color: #666;
+  color: var(--color-text);
   font-weight: 800;
   letter-spacing: -0.8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -366,7 +414,7 @@ const EmptyTitle = styled.h2`
 const EmptyText = styled.p`
   margin-bottom: 40px;
   font-size: 1.05rem;
-  color: #888;
+  color: var(--color-text-secondary);
   line-height: 1.7;
   font-weight: 500;
 `
@@ -389,34 +437,37 @@ const BottomSheet = styled.div<{ $show: boolean }>`
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-radius: 24px 24px 0 0;
-  padding: 24px;
-  padding-bottom: 24px;
+  background: var(--color-surface);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-radius: 28px 28px 0 0;
+  padding: 28px;
+  padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
   max-height: 90vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   z-index: 1000;
   transform: ${props => (props.$show ? 'translateY(0)' : 'translateY(100%)')};
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  transition: transform var(--transition-slow);
+  box-shadow: var(--shadow-2xl), 0 0 0 1px var(--color-border);
+  border-top: 1px solid var(--color-border);
+  animation: ${props => props.$show ? 'slideInFromBottom 0.3s ease-out' : 'none'};
 
   @media (max-width: 480px) {
-    padding: 20px;
-    padding-bottom: 20px;
-    border-radius: 20px 20px 0 0;
-    max-height: 92vh;
+    padding: 24px 20px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+    border-radius: 24px 24px 0 0;
+    max-height: 93vh;
+    backdrop-filter: blur(35px) saturate(180%);
+    -webkit-backdrop-filter: blur(35px) saturate(180%);
   }
 
   @media (min-width: 768px) {
-    max-width: 500px;
+    max-width: 520px;
     left: 50%;
     transform: ${props => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)')};
-    border-radius: 24px;
-    padding-bottom: 24px;
+    border-radius: 28px;
+    padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
   }
 `
 
@@ -430,15 +481,15 @@ const ModalHeader = styled.div`
 const ModalTitle = styled.h2`
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--color-text);
 `
 
 const CloseButton = styled.button`
-  background: #f5f5f5;
-  border: none;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
   font-size: 1.5rem;
   cursor: pointer;
-  color: #666;
+  color: var(--color-text-secondary);
   padding: 8px;
   min-width: 40px;
   min-height: 40px;
@@ -451,8 +502,13 @@ const CloseButton = styled.button`
   position: relative;
   z-index: 1001;
 
+  &:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
+  }
+
   &:active {
-    background: #e0e0e0;
+    background: var(--color-bg-tertiary);
     transform: scale(0.95);
   }
 `
@@ -465,25 +521,30 @@ const Label = styled.label`
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--color-text);
   font-size: 0.95rem;
 `
 
 const Input = styled.input`
   width: 100%;
   padding: 14px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--color-border);
   border-radius: 12px;
   font-size: 1rem;
-  background: #fafafa;
-  color: #1a1a1a;
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
   min-height: 48px;
   transition: all 0.2s;
 
   &:focus {
-    border-color: #667eea;
+    border-color: var(--color-primary);
     outline: none;
-    background: white;
+    background: var(--color-bg-tertiary);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--color-text-secondary);
   }
 `
 
@@ -497,18 +558,31 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   flex: 1;
   padding: 14px;
   background: ${props => {
-    if (props.$variant === 'primary') return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    if (props.$variant === 'danger') return '#e74c3c'
-    return '#f5f5f5'
+    if (props.$variant === 'primary') return 'var(--color-primary-gradient)'
+    if (props.$variant === 'danger') return 'var(--color-danger-gradient)'
+    return 'var(--color-surface-elevated)'
   }};
-  color: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'white' : '#1a1a1a')};
-  border: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'none' : '2px solid #e0e0e0')};
+  color: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'white' : 'var(--color-text)')};
+  border: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'none' : `2px solid var(--color-border)`)};
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   min-height: 48px;
+  box-shadow: ${props => {
+    if (props.$variant === 'primary') return 'var(--shadow-colored)'
+    if (props.$variant === 'danger') return '0 4px 12px rgba(239, 68, 68, 0.3)'
+    return 'var(--shadow-sm)'
+  }};
+
+  &:hover:not(:disabled) {
+    ${props => {
+      if (props.$variant === 'primary') return 'background: var(--color-primary-gradient-hover); box-shadow: var(--shadow-colored-lg);'
+      if (props.$variant === 'danger') return 'background: var(--color-danger); box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);'
+      return 'background: var(--color-bg-tertiary);'
+    }}
+  }
 
   &:active:not(:disabled) {
     transform: scale(0.98);

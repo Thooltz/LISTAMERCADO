@@ -16,10 +16,19 @@ import { parseBRMoneyToNumber } from '../../../shared/utils/money'
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 50%, #f8f9fa 100%);
-  padding-bottom: 20px;
+  min-height: -webkit-fill-available;
+  background: var(--color-bg);
+  background-image: var(--color-bg-gradient-vibrant);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
   position: relative;
   overflow-x: hidden;
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
 
   &::before {
     content: '';
@@ -28,7 +37,7 @@ const Container = styled.div`
     right: -20%;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
     animation: float 20s ease-in-out infinite;
@@ -42,7 +51,7 @@ const Container = styled.div`
     left: -10%;
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, rgba(118, 75, 162, 0.06) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.06) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
     animation: float 25s ease-in-out infinite reverse;
@@ -50,8 +59,12 @@ const Container = styled.div`
   }
 
   @keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(30px, -30px) scale(1.1); }
+    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { transform: translate(30px, -30px) scale(1.1) rotate(5deg); }
+  }
+
+  @media (max-width: 480px) {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
   }
 `
 
@@ -71,7 +84,7 @@ const Content = styled.div<{ hasFooter?: boolean }>`
 
 const AddButton = styled.button`
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary-gradient);
   color: white;
   border: none;
   border-radius: 20px;
@@ -79,7 +92,7 @@ const AddButton = styled.button`
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0);
+  box-shadow: var(--shadow-colored);
   transition: all var(--transition-bounce);
   margin-bottom: 20px;
   min-height: 56px;
@@ -87,6 +100,7 @@ const AddButton = styled.button`
   position: relative;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 
   &::before {
     content: '';
@@ -101,9 +115,16 @@ const AddButton = styled.button`
     transition: width 0.6s, height 0.6s;
   }
 
+  &:hover {
+    background: var(--color-primary-gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-colored-lg);
+  }
+
   &:active {
-    transform: scale(0.95);
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5), 0 0 0 4px rgba(102, 126, 234, 0.2);
+    background: var(--color-primary-dark);
+    transform: scale(0.96) translateY(0);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.5), 0 0 0 4px rgba(34, 197, 94, 0.2);
     
     &::before {
       width: 300px;
@@ -118,17 +139,18 @@ const AddButton = styled.button`
   }
 
   @media (max-width: 480px) {
-    padding: 20px;
-    font-size: 1.1rem;
-    min-height: 60px;
-    border-radius: 18px;
-    margin-bottom: 16px;
+    padding: 22px;
+    font-size: 1.15rem;
+    min-height: 64px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-colored-lg);
   }
 `
 
 const StatsBar = styled.div`
   padding: 24px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: 24px;
@@ -136,7 +158,7 @@ const StatsBar = styled.div`
   display: flex;
   justify-content: space-around;
   box-shadow: var(--shadow-glass);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border);
   animation: fadeIn 0.5s ease-out;
 
   @media (max-width: 480px) {
@@ -153,7 +175,7 @@ const StatItem = styled.div`
 const StatValue = styled.div`
   font-weight: 800;
   font-size: 1.4rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -166,7 +188,7 @@ const StatValue = styled.div`
 
 const StatLabel = styled.div`
   font-size: 0.85rem;
-  color: #999;
+  color: var(--color-text-secondary);
 
   @media (max-width: 480px) {
     font-size: 0.9rem;
@@ -188,15 +210,15 @@ const ItemCard = styled.div<{ checked: boolean }>`
   grid-template-columns: auto 1fr auto;
   grid-template-rows: auto auto;
   gap: 12px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  padding: 18px;
+  background: var(--color-surface);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
   border-radius: 20px;
   box-shadow: var(--shadow-glass);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border);
   transition: all var(--transition-slow);
-  opacity: ${props => (props.checked ? 0.65 : 1)};
+  opacity: ${props => (props.checked ? 0.7 : 1)};
   position: relative;
   overflow: hidden;
   animation: slideUp 0.4s ease-out;
@@ -204,12 +226,19 @@ const ItemCard = styled.div<{ checked: boolean }>`
   pointer-events: auto;
   touch-action: manipulation;
 
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-colored-lg), 0 0 0 1px var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
   @media (max-width: 480px) {
-    padding: 16px;
-    gap: 10px;
-    border-radius: 16px;
+    padding: 18px;
+    gap: 12px;
+    border-radius: 18px;
     grid-template-columns: auto 1fr;
     grid-template-rows: auto auto;
+    box-shadow: var(--shadow-glass-strong);
   }
 
   &::before {
@@ -219,7 +248,7 @@ const ItemCard = styled.div<{ checked: boolean }>`
     top: 0;
     bottom: 0;
     width: 5px;
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    background: var(--color-primary-gradient);
     transform: scaleY(0);
     transform-origin: top;
     transition: transform var(--transition-base);
@@ -234,7 +263,7 @@ const ItemCard = styled.div<{ checked: boolean }>`
     right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%);
     opacity: 0;
     transition: opacity var(--transition-base);
     pointer-events: none;
@@ -242,7 +271,7 @@ const ItemCard = styled.div<{ checked: boolean }>`
 
   &:active {
     transform: scale(0.97) translateY(2px);
-    box-shadow: 0 4px 24px rgba(102, 126, 234, 0.2), 0 0 0 1px rgba(102, 126, 234, 0.1);
+    box-shadow: var(--shadow-colored), 0 0 0 1px var(--color-primary);
     
     &::before {
       transform: scaleY(1);
@@ -259,7 +288,7 @@ const Checkbox = styled.input`
   height: 28px;
   cursor: pointer;
   flex-shrink: 0;
-  accent-color: #667eea;
+  accent-color: var(--color-primary);
   border-radius: 8px;
   -webkit-tap-highlight-color: transparent;
   transition: transform var(--transition-base);
@@ -326,7 +355,7 @@ const ItemName = styled.span<{ checked: boolean }>`
   font-weight: 600;
   font-size: 1.05rem;
   text-decoration: ${props => (props.checked ? 'line-through' : 'none')};
-  color: ${props => (props.checked ? '#999' : '#1a1a1a')};
+  color: ${props => (props.checked ? 'var(--color-text-secondary)' : 'var(--color-text)')};
   flex: 1;
   min-width: 0;
   letter-spacing: -0.2px;
@@ -347,7 +376,7 @@ const ItemName = styled.span<{ checked: boolean }>`
 
 const ItemQty = styled.span`
   font-size: 0.9rem;
-  color: #999;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   font-weight: 600;
 
@@ -362,16 +391,17 @@ const UnitBadge = styled.div<{ $isUn?: boolean }>`
   justify-content: center;
   padding: ${props => props.$isUn ? '8px 14px' : '6px 12px'};
   background: ${props => props.$isUn 
-    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-    : 'linear-gradient(135deg, #f0f4ff 0%, #e8edff 100%)'};
-  color: ${props => props.$isUn ? '#ffffff' : '#667eea'};
+    ? 'var(--color-primary-gradient)' 
+    : 'var(--color-surface-elevated)'};
+  color: ${props => props.$isUn ? '#ffffff' : 'var(--color-primary)'};
   font-size: ${props => props.$isUn ? '0.95rem' : '0.85rem'};
   font-weight: ${props => props.$isUn ? '700' : '600'};
   border-radius: ${props => props.$isUn ? '12px' : '10px'};
   white-space: nowrap;
   box-shadow: ${props => props.$isUn 
-    ? '0 2px 8px rgba(102, 126, 234, 0.3)' 
-    : '0 1px 4px rgba(102, 126, 234, 0.15)'};
+    ? 'var(--shadow-colored)' 
+    : 'var(--shadow-sm)'};
+  border: ${props => props.$isUn ? 'none' : `1px solid var(--color-border)`};
   min-width: ${props => props.$isUn ? '48px' : '40px'};
   letter-spacing: 0.3px;
   transition: all 0.2s ease;
@@ -420,12 +450,12 @@ const ItemActions = styled.div`
 `
 
 const ActionButton = styled.button`
-  background: rgba(248, 249, 250, 0.8);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border);
   font-size: 1.1rem;
   cursor: pointer;
-  color: #666;
+  color: var(--color-text-secondary);
   padding: 8px;
   min-width: 40px;
   min-height: 40px;
@@ -434,7 +464,7 @@ const ActionButton = styled.button`
   justify-content: center;
   border-radius: 10px;
   transition: all var(--transition-base);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   pointer-events: auto;
   position: relative;
   z-index: 200;
@@ -451,17 +481,22 @@ const ActionButton = styled.button`
     font-size: 1rem;
   }
 
+  &:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
+  }
+
   &:active {
-    background: rgba(233, 236, 239, 0.9);
+    background: var(--color-bg-tertiary);
     transform: scale(0.9) rotate(5deg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 
   &.danger:active {
-    color: #e74c3c;
-    background: rgba(254, 238, 238, 0.9);
+    color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.2);
     transform: scale(0.9) rotate(-5deg);
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
   }
 
   &:disabled {
@@ -474,31 +509,33 @@ const ActionButton = styled.button`
 const EmptyState = styled.div`
   text-align: center;
   padding: 60px 20px;
-  color: #999;
+  color: var(--color-text-secondary);
 `
 
 const EmptyTitle = styled.h3`
   font-size: 1.2rem;
   margin-bottom: 12px;
-  color: #666;
+  color: var(--color-text);
   font-weight: 600;
 `
 
 const EmptyText = styled.p`
   margin-bottom: 24px;
   font-size: 0.95rem;
+  color: var(--color-text-secondary);
 `
 
 const ErrorState = styled.div`
   text-align: center;
   padding: 60px 20px;
-  color: #e74c3c;
+  color: var(--color-danger);
 `
 
 const ErrorTitle = styled.h2`
   font-size: 1.3rem;
   margin-bottom: 12px;
   font-weight: 600;
+  color: var(--color-danger);
 `
 
 const TotalFooter = styled.div`
@@ -506,18 +543,22 @@ const TotalFooter = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 16px;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-top: 1px solid var(--color-border);
+  padding: 20px 16px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  box-shadow: var(--shadow-2xl), 0 0 0 1px var(--color-border);
   z-index: 100;
   max-width: 600px;
   margin: 0 auto;
 
   @media (max-width: 480px) {
-    padding: 16px;
+    padding: 20px 16px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    backdrop-filter: blur(35px) saturate(180%);
+    -webkit-backdrop-filter: blur(35px) saturate(180%);
   }
 `
 
@@ -536,15 +577,15 @@ const TotalRow = styled.div`
 const TotalLabel = styled.span`
   font-size: 1rem;
   font-weight: 600;
-  color: #666;
+  color: var(--color-text-secondary);
 `
 
 const TotalValue = styled.span<{ $isExceeded?: boolean }>`
   font-size: 1.4rem;
   font-weight: 800;
   background: ${props => props.$isExceeded 
-    ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+    ? 'var(--color-danger-gradient)'
+    : 'var(--color-primary-gradient)'};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -554,16 +595,17 @@ const TotalValue = styled.span<{ $isExceeded?: boolean }>`
 const RemainingValue = styled.span<{ $isExceeded: boolean }>`
   font-size: 1.1rem;
   font-weight: 700;
-  color: ${props => props.$isExceeded ? '#ef4444' : '#10b981'};
+  color: ${props => props.$isExceeded ? 'var(--color-danger)' : 'var(--color-primary)'};
 `
 
 const BudgetCard = styled.div`
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-surface);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border-radius: 18px;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-glass-strong);
+  border: 1px solid var(--color-border);
   overflow: hidden;
   z-index: 50;
   margin-top: 16px;
@@ -620,7 +662,7 @@ const BudgetHeaderLeft = styled.div`
 const BudgetHeaderText = styled.span`
   font-weight: 700;
   font-size: 14px;
-  color: #1a1a1a;
+  color: var(--color-text);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -633,7 +675,7 @@ const BudgetHeaderText = styled.span`
 const BudgetMini = styled.span`
   font-size: 12px;
   opacity: 0.7;
-  color: #666;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -650,7 +692,7 @@ const BudgetToggleIcon = styled.span<{ $isOpen: boolean }>`
   display: inline-block;
   flex-shrink: 0;
   margin-left: 12px;
-  color: #666;
+  color: var(--color-text-secondary);
 `
 
 const BudgetContent = styled.div<{ $isOpen: boolean }>`
@@ -682,26 +724,29 @@ const BottomSheet = styled.div<{ $show: boolean }>`
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  background: var(--color-surface);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   border-radius: 28px 28px 0 0;
   padding: 28px;
-  padding-bottom: 28px;
+  padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
   max-height: 90vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   z-index: 1000;
   transform: ${props => (props.$show ? 'translateY(0)' : 'translateY(100%)')};
   transition: transform var(--transition-slow);
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-2xl), 0 0 0 1px var(--color-border);
+  border-top: 1px solid var(--color-border);
+  animation: ${props => props.$show ? 'slideInFromBottom 0.3s ease-out' : 'none'};
 
   @media (max-width: 480px) {
     padding: 24px 20px;
-    padding-bottom: 24px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
     border-radius: 24px 24px 0 0;
-    max-height: 92vh;
+    max-height: 93vh;
+    backdrop-filter: blur(35px) saturate(180%);
+    -webkit-backdrop-filter: blur(35px) saturate(180%);
   }
 
   @media (min-width: 768px) {
@@ -709,7 +754,7 @@ const BottomSheet = styled.div<{ $show: boolean }>`
     left: 50%;
     transform: ${props => (props.$show ? 'translate(-50%, 0)' : 'translate(-50%, 100%)')};
     border-radius: 28px;
-    padding-bottom: 28px;
+    padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
   }
 `
 
@@ -723,16 +768,16 @@ const ModalHeader = styled.div`
 const ModalTitle = styled.h2`
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--color-text);
 `
 
 const CloseButton = styled.button`
-  background: rgba(245, 245, 245, 0.8);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border);
   font-size: 1.5rem;
   cursor: pointer;
-  color: #666;
+  color: var(--color-text-secondary);
   padding: 8px;
   min-width: 44px;
   min-height: 44px;
@@ -741,15 +786,20 @@ const CloseButton = styled.button`
   justify-content: center;
   border-radius: 12px;
   transition: all var(--transition-base);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   pointer-events: auto;
   position: relative;
   z-index: 1001;
 
+  &:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
+  }
+
   &:active {
-    background: rgba(233, 236, 239, 0.9);
+    background: var(--color-bg-tertiary);
     transform: scale(0.9) rotate(90deg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 `
 
@@ -761,31 +811,35 @@ const Label = styled.label`
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--color-text);
   font-size: 0.95rem;
 `
 
 const Input = styled.input`
   width: 100%;
   padding: 16px;
-  border: 2px solid rgba(224, 224, 224, 0.5);
+  border: 2px solid var(--color-border);
   border-radius: 16px;
   font-size: 16px;
-  background: rgba(250, 250, 250, 0.8);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  color: #1a1a1a;
+  color: var(--color-text);
   min-height: 52px;
   transition: all var(--transition-base);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
 
   &:focus {
-    border-color: #667eea;
+    border-color: var(--color-primary);
     outline: none;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
+    background: var(--color-bg-tertiary);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1), 0 4px 12px rgba(34, 197, 94, 0.15);
     transform: translateY(-1px);
+  }
+
+  &::placeholder {
+    color: var(--color-text-secondary);
   }
 
   @media (max-width: 480px) {
@@ -799,24 +853,24 @@ const Input = styled.input`
 const Select = styled.select`
   width: 100%;
   padding: 16px;
-  border: 2px solid rgba(224, 224, 224, 0.5);
+  border: 2px solid var(--color-border);
   border-radius: 16px;
   font-size: 16px;
-  background: rgba(250, 250, 250, 0.8);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
-  color: #1a1a1a;
+  color: var(--color-text);
   min-height: 52px;
   transition: all var(--transition-base);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
 
   &:focus {
-    border-color: #667eea;
+    border-color: var(--color-primary);
     outline: none;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
+    background: var(--color-bg-tertiary);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1), 0 4px 12px rgba(34, 197, 94, 0.15);
     transform: translateY(-1px);
   }
 
@@ -838,12 +892,12 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   flex: 1;
   padding: 16px;
   background: ${props => {
-    if (props.$variant === 'primary') return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    if (props.$variant === 'danger') return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-    return 'rgba(245, 245, 245, 0.8)'
+    if (props.$variant === 'primary') return 'var(--color-primary-gradient)'
+    if (props.$variant === 'danger') return 'var(--color-danger-gradient)'
+    return 'var(--color-surface-elevated)'
   }};
-  color: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'white' : '#1a1a1a')};
-  border: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'none' : '2px solid rgba(224, 224, 224, 0.5)')};
+  color: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'white' : 'var(--color-text)')};
+  border: ${props => (props.$variant === 'primary' || props.$variant === 'danger' ? 'none' : `2px solid var(--color-border)`)};
   border-radius: 16px;
   font-size: 1rem;
   font-weight: 600;
@@ -852,18 +906,26 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   min-height: 52px;
   backdrop-filter: ${props => props.$variant === 'secondary' ? 'blur(10px)' : 'none'};
   box-shadow: ${props => {
-    if (props.$variant === 'primary') return '0 4px 12px rgba(102, 126, 234, 0.3)'
+    if (props.$variant === 'primary') return 'var(--shadow-colored)'
     if (props.$variant === 'danger') return '0 4px 12px rgba(239, 68, 68, 0.3)'
-    return '0 2px 8px rgba(0, 0, 0, 0.05)'
+    return 'var(--shadow-sm)'
   }};
   -webkit-tap-highlight-color: transparent;
+
+  &:hover:not(:disabled) {
+    ${props => {
+      if (props.$variant === 'primary') return 'background: var(--color-primary-gradient-hover); box-shadow: var(--shadow-colored-lg);'
+      if (props.$variant === 'danger') return 'background: var(--color-danger); box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);'
+      return 'background: var(--color-bg-tertiary);'
+    }}
+  }
 
   &:active:not(:disabled) {
     transform: scale(0.96);
     box-shadow: ${props => {
-      if (props.$variant === 'primary') return '0 2px 8px rgba(102, 126, 234, 0.4), 0 0 0 3px rgba(102, 126, 234, 0.2)'
+      if (props.$variant === 'primary') return '0 2px 8px rgba(34, 197, 94, 0.4), 0 0 0 3px rgba(34, 197, 94, 0.2)'
       if (props.$variant === 'danger') return '0 2px 8px rgba(239, 68, 68, 0.4), 0 0 0 3px rgba(239, 68, 68, 0.2)'
-      return '0 1px 4px rgba(0, 0, 0, 0.1)'
+      return 'var(--shadow-md)'
     }};
   }
 

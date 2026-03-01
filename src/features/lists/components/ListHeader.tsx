@@ -12,15 +12,24 @@ type ListHeaderProps = {
 const StickyHeader = styled.header`
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: var(--color-surface);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
   z-index: 10000;
-  padding: 14px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  padding: 16px 12px;
+  padding-top: max(16px, env(safe-area-inset-top, 16px));
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-glass);
   pointer-events: auto;
   isolation: isolate;
+  transition: all var(--transition-smooth);
+
+  @media (max-width: 480px) {
+    padding: 18px 16px;
+    padding-top: max(18px, env(safe-area-inset-top, 18px));
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+  }
 `
 
 const HeaderContent = styled.div`
@@ -38,8 +47,8 @@ const BackButton = styled.button`
   min-width: 44px;
   min-height: 44px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(245, 245, 245, 0.9);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated);
   cursor: pointer;
   pointer-events: auto;
   position: relative;
@@ -48,6 +57,7 @@ const BackButton = styled.button`
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  color: var(--color-text-secondary);
   
   @media (max-width: 480px) {
     min-width: 48px;
@@ -56,11 +66,12 @@ const BackButton = styled.button`
   
   &:active {
     transform: scale(0.95);
-    background: rgba(233, 236, 239, 0.9);
+    background: var(--color-bg-tertiary);
   }
   
   &:hover {
-    background: rgba(233, 236, 239, 0.95);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
   }
 `
 
@@ -69,19 +80,26 @@ const Title = styled.h1`
   margin: 0;
   font-size: 1.25rem;
   line-height: 1.2;
-  color: #1a1a1a;
+  color: var(--color-text);
 `
 
 const NameInput = styled.input`
   flex: 1;
   min-height: 44px;
   border-radius: 12px;
-  border: 2px solid rgba(224, 224, 224, 0.7);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
   padding: 8px 12px;
   font-size: 1rem;
   pointer-events: auto;
   position: relative;
   z-index: 202;
+
+  &:focus {
+    border-color: var(--color-primary);
+    outline: none;
+  }
 `
 
 const Actions = styled.div`
@@ -96,8 +114,8 @@ const IconButton = styled.button`
   min-width: 44px;
   min-height: 44px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(245, 245, 245, 0.9);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated);
   cursor: pointer;
   pointer-events: auto;
   position: relative;
@@ -106,6 +124,7 @@ const IconButton = styled.button`
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  color: var(--color-text-secondary);
   
   @media (max-width: 480px) {
     min-width: 48px;
@@ -114,11 +133,12 @@ const IconButton = styled.button`
   
   &:active {
     transform: scale(0.95);
-    background: rgba(233, 236, 239, 0.9);
+    background: var(--color-bg-tertiary);
   }
   
   &:hover {
-    background: rgba(233, 236, 239, 0.95);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
   }
   
   &:disabled {
@@ -131,7 +151,7 @@ const IconButton = styled.button`
 const ErrorText = styled.p`
   max-width: 600px;
   margin: 8px auto 0;
-  color: #dc2626;
+  color: var(--color-danger);
   font-size: 0.9rem;
 `
 
