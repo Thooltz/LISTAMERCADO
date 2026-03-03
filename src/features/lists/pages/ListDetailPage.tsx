@@ -469,15 +469,16 @@ const ActionButton = styled.button`
   position: relative;
   z-index: 200;
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: rgba(34, 197, 94, 0.2);
   user-select: none;
   -webkit-user-select: none;
   box-sizing: border-box;
+  -webkit-touch-callout: none;
 
   @media (max-width: 480px) {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 10px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 12px;
     font-size: 1rem;
   }
 
@@ -488,14 +489,14 @@ const ActionButton = styled.button`
 
   &:active {
     background: var(--color-bg-tertiary);
-    transform: scale(0.9) rotate(5deg);
+    transform: scale(0.95);
     box-shadow: var(--shadow-md);
   }
 
   &.danger:active {
     color: var(--color-danger);
     background: rgba(239, 68, 68, 0.2);
-    transform: scale(0.9) rotate(-5deg);
+    transform: scale(0.95);
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
   }
 
@@ -1500,7 +1501,7 @@ function ListDetailPage() {
                       />
                     </ItemBottomRow>
                   </ItemContent>
-                  <ItemActions>
+                  <ItemActions onClick={(e) => e.stopPropagation()}>
                     <ActionButton 
                       type="button"
                       onClick={(e) => {
@@ -1509,14 +1510,10 @@ function ListDetailPage() {
                         console.log('✅ Editar Item CLICADO', item.id)
                         handleEditItem(item)
                       }}
-                      onPointerDown={(e) => {
+                      onMouseDown={(e) => {
                         e.stopPropagation()
                       }}
                       onTouchStart={(e) => {
-                        e.stopPropagation()
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault()
                         e.stopPropagation()
                       }}
                       aria-label={`Editar item ${item.name}`}
@@ -1534,14 +1531,10 @@ function ListDetailPage() {
                         setEditingItemId(item.id)
                         setShowDeleteItemConfirm(true)
                       }}
-                      onPointerDown={(e) => {
+                      onMouseDown={(e) => {
                         e.stopPropagation()
                       }}
                       onTouchStart={(e) => {
-                        e.stopPropagation()
-                      }}
-                      onTouchEnd={(e) => {
-                        e.preventDefault()
                         e.stopPropagation()
                       }}
                       aria-label={`Remover item ${item.name}`}
